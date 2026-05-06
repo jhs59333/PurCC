@@ -152,4 +152,92 @@ src/
 
 ---
 
+## 🚢 部署指南
+
+### 方案 A：Vercel（推薦，零設定）
+
+1. 將專案推送到 GitHub（Lovable 編輯器右上 → **GitHub → Connect**，或本機 `git push`）
+2. 前往 [vercel.com/new](https://vercel.com/new) 並匯入 repo
+3. Vercel 會自動偵測 Vite，使用預設值即可：
+   - **Framework Preset**：`Vite`
+   - **Build Command**：`bun run build`（或 `npm run build`）
+   - **Output Directory**：`dist`
+4. 點擊 **Deploy**，約 1 分鐘後取得 `https://your-app.vercel.app`
+
+> ✅ **SPA 路由自動支援** — Vercel 會處理 React Router 的深層連結與重新整理。
+
+#### 自動部署
+每次 push 到 `main` 分支會自動重新部署；PR 會生成 Preview URL。
+
+---
+
+### 方案 B：GitHub Pages
+
+GitHub Pages 部署在子路徑（`https://<user>.github.io/<repo>/`），需要額外設定：
+
+#### 1. 設定 `vite.config.ts` 的 `base`
+```ts
+export default defineConfig({
+  base: '/your-repo-name/',  // 換成你的 repo 名
+  // ...
+});
+```
+
+#### 2. 處理 SPA 路由
+由於 GitHub Pages 不支援 SPA fallback，將 `BrowserRouter` 改為 `HashRouter`（`src/App.tsx`）：
+```tsx
+import { HashRouter } from 'react-router-dom';
+// <BrowserRouter> → <HashRouter>
+```
+
+#### 3. 建立 GitHub Actions workflow
+新增 `.github/workflows/deploy.yml`：
+```yaml
+name: Deploy to GitHub Pages
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v1
+      - run: bun install
+      - run: bun run build
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
+```
+
+#### 4. 啟用 GitHub Pages
+Repo → **Settings → Pages → Source** 選擇 **GitHub Actions**，push 後自動部署。
+
+---
+
+### 方案 C：Lovable 一鍵發布（最簡單）
+
+直接點擊 Lovable 編輯器右上角的 **Publish** 按鈕，立即取得 `https://*.lovable.app` 公開網址，無需任何設定。
+
+| 方案 | 設定難度 | 自訂網域 | 適合場景 |
+|------|---------|---------|---------|
+| Lovable Publish | ⭐ | ✅ | 快速 demo / 正式上線 |
+| Vercel | ⭐⭐ | ✅ | 需要 CI/CD、Preview URL |
+| GitHub Pages | ⭐⭐⭐ | ✅ | 純靜態、免費託管 |
+
+---
+
 最後更新：2026 年 5 月　|　**PurCC — 溫暖的地方，等你來分享 💜**
