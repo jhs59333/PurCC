@@ -22,33 +22,61 @@ export default function Discover() {
   const [quizStep, setQuizStep] = useState(0);
   const startRef = useRef({ x: 0, y: 0 });
 
+  const SWIPE_THRESHOLD = 120;          // 觸發門檻
+  const STAMP_FULL = 90;                // 戳記完全顯示距離
+  const [flying, setFlying] = useState<{ dir: 1 | -1 | 0; up?: boolean } | null>(null);
+
   const top = stack[0];
   const next2 = stack.slice(1, 3);
-  const rotate = drag.x / 14;
-  const likeOpacity = Math.max(0, Math.min(1, drag.x / 100));
-  const passOpacity = Math.max(0, Math.min(1, -drag.x / 100));
+
+  // 拖拽強度 0~1（採非線性 easeOut，初動更靈敏，越靠門檻越「重」）
+  const absX = Math.abs(drag.x);
+  const intensity = Math.min(1, absX / SWIPE_THRESHOLD);
+  const eased = 1 - Math.pow(1 - intensity, 2.2);
+
+  // 旋轉採對稱 sigmoid，避免甩出時抖動；最大 ±18deg
+  const rotate = (drag.x / SWIPE_THRESHOLD) * 18 * (1 - intensity * 0.25);
+  // 上拖（super like）小幅縮放
+  const liftY = drag.y < 0 ? Math.max(drag.y, -120) : drag.y * 0.35;
+  const scale = 1 + eased * 0.02;
+
+  // 戳記：採 STAMP_FULL 為基準，更早出現、更分明
+  const likeOpacity = Math.max(0, Math.min(1, drag.x / STAMP_FULL));
+  const passOpacity = Math.max(0, Math.min(1, -drag.x / STAMP_FULL));
+  const superOpacity = Math.max(0, Math.min(1, -liftY / 90)) * (Math.abs(drag.x) < 60 ? 1 : 0);
+  const stampActive = intensity >= 1;
 
   const handleAction = (kind: "like" | "pass" | "super") => {
     if (!top) return;
-    if (kind === "like" || kind === "super") {
-      if (Math.random() < 0.5) setMatch(top);
-    }
-    setHistory((h) => [top, ...h].slice(0, 5));
-    setStack((s) => s.slice(1));
-    setDrag({ x: 0, y: 0, dragging: false });
+    // 飛出動畫
+    setFlying({ dir: kind === "pass" ? -1 : 1, up: kind === "super" });
+    window.setTimeout(() => {
+      if (kind === "like" || kind === "super") {
+        if (Math.random() < 0.5) setMatch(top);
+      }
+      setHistory((h) => [top, ...h].slice(0, 5));
+      setStack((s) => s.slice(1));
+      setDrag({ x: 0, y: 0, dragging: false });
+      setFlying(null);
+    }, 280);
   };
 
   const onPointerDown = (e: React.PointerEvent) => {
+    if (flying) return;
     startRef.current = { x: e.clientX, y: e.clientY };
     setDrag({ x: 0, y: 0, dragging: true });
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
   };
   const onPointerMove = (e: React.PointerEvent) => {
     if (!drag.dragging) return;
-    setDrag({ x: e.clientX - startRef.current.x, y: e.clientY - startRef.current.y, dragging: true });
+    const dx = e.clientX - startRef.current.x;
+    const dy = e.clientY - startRef.current.y;
+    setDrag({ x: dx, y: dy, dragging: true });
   };
   const onPointerUp = () => {
-    if (Math.abs(drag.x) > 110) handleAction(drag.x > 0 ? "like" : "pass");
+    if (!drag.dragging) return;
+    if (drag.y < -90 && Math.abs(drag.x) < 80) handleAction("super");
+    else if (Math.abs(drag.x) > SWIPE_THRESHOLD) handleAction(drag.x > 0 ? "like" : "pass");
     else setDrag({ x: 0, y: 0, dragging: false });
   };
 
@@ -110,8 +138,10 @@ export default function Discover() {
               key={p.id + i}
               className="absolute inset-0 rounded-3xl glass shadow-card"
               style={{
-                transform: `translateY(${(i + 1) * 8}px) scale(${1 - (i + 1) * 0.04})`,
-                opacity: 0.6 - i * 0.2,
+                transform: `translateY(${(i + 1) * 10 - eased * (i === 0 ? 8 : 4)}px) scale(${1 - (i + 1) * 0.05 + eased * (i === 0 ? 0.04 : 0.02)}) rotateX(${4 - eased * 3}deg)`,
+                opacity: 0.55 - i * 0.18 + eased * 0.2,
+                transition: drag.dragging ? "none" : "transform .35s cubic-bezier(.2,.9,.3,1.2), opacity .35s",
+                transformOrigin: "center bottom",
                 zIndex: 1,
               }}
             />
@@ -128,26 +158,73 @@ export default function Discover() {
               onPointerCancel={onPointerUp}
               className="absolute inset-0 rounded-3xl overflow-hidden cursor-grab active:cursor-grabbing animate-card-entry shadow-card touch-none select-none"
               style={{
-                transform: `translate(${drag.x}px, ${drag.y}px) rotate(${rotate}deg)`,
-                transition: drag.dragging ? "none" : "transform .35s cubic-bezier(.2,.9,.3,1.2)",
+                transform: flying
+                  ? `translate(${flying.dir * 600}px, ${flying.up ? -800 : 200}px) rotate(${flying.dir * 35}deg) scale(0.9)`
+                  : `translate3d(${drag.x}px, ${liftY}px, 0) rotate(${rotate}deg) rotateY(${drag.x / 40}deg) rotateX(${-liftY / 40}deg) scale(${scale})`,
+                transition: drag.dragging
+                  ? "none"
+                  : flying
+                    ? "transform .28s cubic-bezier(.4,0,.7,.3), opacity .28s"
+                    : "transform .4s cubic-bezier(.2,.9,.3,1.2)",
+                opacity: flying ? 0 : 1,
                 zIndex: 10,
                 transformStyle: "preserve-3d",
+                willChange: "transform",
+                boxShadow: `0 ${20 + eased * 30}px ${50 + eased * 40}px -15px hsl(258 60% 4% / ${0.6 + eased * 0.2})`,
               }}
             >
               {/* 背景漸層 */}
               <div className={`absolute inset-0 bg-gradient-to-br ${top.color} opacity-90`} />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
-              {/* 頭像 / Blind */}
-              <div className="absolute inset-0 flex items-center justify-center text-[140px] drop-shadow-2xl">
+              {/* 拖拽方向色暈 */}
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  opacity: eased * 0.55,
+                  background: drag.x > 0
+                    ? "radial-gradient(circle at 25% 50%, hsl(var(--success) / .55), transparent 60%)"
+                    : drag.x < 0
+                      ? "radial-gradient(circle at 75% 50%, hsl(var(--rose) / .55), transparent 60%)"
+                      : "radial-gradient(circle at 50% 25%, hsl(200 90% 60% / .55), transparent 60%)",
+                }}
+              />
+
+              {/* 頭像 / Blind — 微視差 */}
+              <div
+                className="absolute inset-0 flex items-center justify-center text-[140px] drop-shadow-2xl pointer-events-none"
+                style={{ transform: `translate(${drag.x * 0.08}px, ${liftY * 0.08}px)` }}
+              >
                 {mode === "blind" ? "🎭" : top.avatar}
               </div>
 
-              {/* LIKE / PASS 戳記 */}
-              <div className="absolute top-12 left-6 px-3 py-1 border-4 border-success rounded-xl rotate-[-15deg] text-success font-black text-2xl tracking-widest"
-                style={{ opacity: likeOpacity }}>LIKE</div>
-              <div className="absolute top-12 right-6 px-3 py-1 border-4 border-rose rounded-xl rotate-[15deg] text-rose font-black text-2xl tracking-widest"
-                style={{ opacity: passOpacity }}>PASS</div>
+              {/* LIKE / PASS / SUPER 戳記 — 隨強度縮放 + 觸發時發光 */}
+              <div
+                className="absolute top-12 left-6 px-4 py-1.5 border-4 border-success rounded-xl text-success font-black text-3xl tracking-widest pointer-events-none"
+                style={{
+                  opacity: likeOpacity,
+                  transform: `rotate(-15deg) scale(${0.7 + likeOpacity * 0.4})`,
+                  textShadow: `0 0 ${likeOpacity * 20}px hsl(var(--success) / .8)`,
+                  filter: stampActive && drag.x > 0 ? "drop-shadow(0 0 14px hsl(var(--success)))" : "none",
+                }}
+              >LIKE</div>
+              <div
+                className="absolute top-12 right-6 px-4 py-1.5 border-4 border-rose rounded-xl text-rose font-black text-3xl tracking-widest pointer-events-none"
+                style={{
+                  opacity: passOpacity,
+                  transform: `rotate(15deg) scale(${0.7 + passOpacity * 0.4})`,
+                  textShadow: `0 0 ${passOpacity * 20}px hsl(var(--rose) / .8)`,
+                  filter: stampActive && drag.x < 0 ? "drop-shadow(0 0 14px hsl(var(--rose)))" : "none",
+                }}
+              >PASS</div>
+              <div
+                className="absolute top-1/4 left-1/2 px-4 py-1.5 border-4 border-sky-400 rounded-xl text-sky-300 font-black text-3xl tracking-widest pointer-events-none"
+                style={{
+                  opacity: superOpacity,
+                  transform: `translateX(-50%) scale(${0.7 + superOpacity * 0.4})`,
+                  textShadow: `0 0 ${superOpacity * 20}px hsl(200 90% 60% / .9)`,
+                }}
+              >SUPER</div>
 
               {/* 暖度 */}
               <div className="absolute top-4 right-4 bg-black/40 backdrop-blur rounded-full p-1">
