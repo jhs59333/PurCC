@@ -138,8 +138,10 @@ export default function Discover() {
               key={p.id + i}
               className="absolute inset-0 rounded-3xl glass shadow-card"
               style={{
-                transform: `translateY(${(i + 1) * 8}px) scale(${1 - (i + 1) * 0.04})`,
-                opacity: 0.6 - i * 0.2,
+                transform: `translateY(${(i + 1) * 10 - eased * (i === 0 ? 8 : 4)}px) scale(${1 - (i + 1) * 0.05 + eased * (i === 0 ? 0.04 : 0.02)}) rotateX(${4 - eased * 3}deg)`,
+                opacity: 0.55 - i * 0.18 + eased * 0.2,
+                transition: drag.dragging ? "none" : "transform .35s cubic-bezier(.2,.9,.3,1.2), opacity .35s",
+                transformOrigin: "center bottom",
                 zIndex: 1,
               }}
             />
@@ -156,26 +158,73 @@ export default function Discover() {
               onPointerCancel={onPointerUp}
               className="absolute inset-0 rounded-3xl overflow-hidden cursor-grab active:cursor-grabbing animate-card-entry shadow-card touch-none select-none"
               style={{
-                transform: `translate(${drag.x}px, ${drag.y}px) rotate(${rotate}deg)`,
-                transition: drag.dragging ? "none" : "transform .35s cubic-bezier(.2,.9,.3,1.2)",
+                transform: flying
+                  ? `translate(${flying.dir * 600}px, ${flying.up ? -800 : 200}px) rotate(${flying.dir * 35}deg) scale(0.9)`
+                  : `translate3d(${drag.x}px, ${liftY}px, 0) rotate(${rotate}deg) rotateY(${drag.x / 40}deg) rotateX(${-liftY / 40}deg) scale(${scale})`,
+                transition: drag.dragging
+                  ? "none"
+                  : flying
+                    ? "transform .28s cubic-bezier(.4,0,.7,.3), opacity .28s"
+                    : "transform .4s cubic-bezier(.2,.9,.3,1.2)",
+                opacity: flying ? 0 : 1,
                 zIndex: 10,
                 transformStyle: "preserve-3d",
+                willChange: "transform",
+                boxShadow: `0 ${20 + eased * 30}px ${50 + eased * 40}px -15px hsl(258 60% 4% / ${0.6 + eased * 0.2})`,
               }}
             >
               {/* 背景漸層 */}
               <div className={`absolute inset-0 bg-gradient-to-br ${top.color} opacity-90`} />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
-              {/* 頭像 / Blind */}
-              <div className="absolute inset-0 flex items-center justify-center text-[140px] drop-shadow-2xl">
+              {/* 拖拽方向色暈 */}
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  opacity: eased * 0.55,
+                  background: drag.x > 0
+                    ? "radial-gradient(circle at 25% 50%, hsl(var(--success) / .55), transparent 60%)"
+                    : drag.x < 0
+                      ? "radial-gradient(circle at 75% 50%, hsl(var(--rose) / .55), transparent 60%)"
+                      : "radial-gradient(circle at 50% 25%, hsl(200 90% 60% / .55), transparent 60%)",
+                }}
+              />
+
+              {/* 頭像 / Blind — 微視差 */}
+              <div
+                className="absolute inset-0 flex items-center justify-center text-[140px] drop-shadow-2xl pointer-events-none"
+                style={{ transform: `translate(${drag.x * 0.08}px, ${liftY * 0.08}px)` }}
+              >
                 {mode === "blind" ? "🎭" : top.avatar}
               </div>
 
-              {/* LIKE / PASS 戳記 */}
-              <div className="absolute top-12 left-6 px-3 py-1 border-4 border-success rounded-xl rotate-[-15deg] text-success font-black text-2xl tracking-widest"
-                style={{ opacity: likeOpacity }}>LIKE</div>
-              <div className="absolute top-12 right-6 px-3 py-1 border-4 border-rose rounded-xl rotate-[15deg] text-rose font-black text-2xl tracking-widest"
-                style={{ opacity: passOpacity }}>PASS</div>
+              {/* LIKE / PASS / SUPER 戳記 — 隨強度縮放 + 觸發時發光 */}
+              <div
+                className="absolute top-12 left-6 px-4 py-1.5 border-4 border-success rounded-xl text-success font-black text-3xl tracking-widest pointer-events-none"
+                style={{
+                  opacity: likeOpacity,
+                  transform: `rotate(-15deg) scale(${0.7 + likeOpacity * 0.4})`,
+                  textShadow: `0 0 ${likeOpacity * 20}px hsl(var(--success) / .8)`,
+                  filter: stampActive && drag.x > 0 ? "drop-shadow(0 0 14px hsl(var(--success)))" : "none",
+                }}
+              >LIKE</div>
+              <div
+                className="absolute top-12 right-6 px-4 py-1.5 border-4 border-rose rounded-xl text-rose font-black text-3xl tracking-widest pointer-events-none"
+                style={{
+                  opacity: passOpacity,
+                  transform: `rotate(15deg) scale(${0.7 + passOpacity * 0.4})`,
+                  textShadow: `0 0 ${passOpacity * 20}px hsl(var(--rose) / .8)`,
+                  filter: stampActive && drag.x < 0 ? "drop-shadow(0 0 14px hsl(var(--rose)))" : "none",
+                }}
+              >PASS</div>
+              <div
+                className="absolute top-1/4 left-1/2 px-4 py-1.5 border-4 border-sky-400 rounded-xl text-sky-300 font-black text-3xl tracking-widest pointer-events-none"
+                style={{
+                  opacity: superOpacity,
+                  transform: `translateX(-50%) scale(${0.7 + superOpacity * 0.4})`,
+                  textShadow: `0 0 ${superOpacity * 20}px hsl(200 90% 60% / .9)`,
+                }}
+              >SUPER</div>
 
               {/* 暖度 */}
               <div className="absolute top-4 right-4 bg-black/40 backdrop-blur rounded-full p-1">
