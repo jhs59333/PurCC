@@ -7,6 +7,8 @@ import { PEOPLE, CITIES, type Person } from "@/lib/mock";
 import { useApp } from "@/lib/store";
 import { WarmthRing } from "@/components/WarmthRing";
 import { Heart, RotateCcw, Star, UserPlus, X, Zap, EyeOff, Globe2, MessageCircleQuestion } from "lucide-react";
+import { useDiscoverTuning } from "@/lib/tuning";
+import { TuningPanel } from "@/components/TuningPanel";
 
 type Mode = "normal" | "blind" | "passport" | "quiz";
 
@@ -22,25 +24,22 @@ export default function Discover() {
   const [quizStep, setQuizStep] = useState(0);
   const startRef = useRef({ x: 0, y: 0 });
 
-  const SWIPE_THRESHOLD = 120;          // 觸發門檻
-  const STAMP_FULL = 90;                // 戳記完全顯示距離
+  const { tuning, update, reset } = useDiscoverTuning();
+  const SWIPE_THRESHOLD = tuning.swipeThreshold;
+  const STAMP_FULL = tuning.stampFull;
   const [flying, setFlying] = useState<{ dir: 1 | -1 | 0; up?: boolean } | null>(null);
 
   const top = stack[0];
   const next2 = stack.slice(1, 3);
 
-  // 拖拽強度 0~1（採非線性 easeOut，初動更靈敏，越靠門檻越「重」）
   const absX = Math.abs(drag.x);
   const intensity = Math.min(1, absX / SWIPE_THRESHOLD);
   const eased = 1 - Math.pow(1 - intensity, 2.2);
 
-  // 旋轉採對稱 sigmoid，避免甩出時抖動；最大 ±18deg
-  const rotate = (drag.x / SWIPE_THRESHOLD) * 18 * (1 - intensity * 0.25);
-  // 上拖（super like）小幅縮放
-  const liftY = drag.y < 0 ? Math.max(drag.y, -120) : drag.y * 0.35;
+  const rotate = (drag.x / SWIPE_THRESHOLD) * tuning.maxRotate * (1 - intensity * 0.25);
+  const liftY = drag.y < 0 ? Math.max(drag.y, -tuning.liftMax) : drag.y * 0.35;
   const scale = 1 + eased * 0.02;
 
-  // 戳記：採 STAMP_FULL 為基準，更早出現、更分明
   const likeOpacity = Math.max(0, Math.min(1, drag.x / STAMP_FULL));
   const passOpacity = Math.max(0, Math.min(1, -drag.x / STAMP_FULL));
   const superOpacity = Math.max(0, Math.min(1, -liftY / 90)) * (Math.abs(drag.x) < 60 ? 1 : 0);
@@ -160,7 +159,7 @@ export default function Discover() {
               style={{
                 transform: flying
                   ? `translate(${flying.dir * 600}px, ${flying.up ? -800 : 200}px) rotate(${flying.dir * 35}deg) scale(0.9)`
-                  : `translate3d(${drag.x}px, ${liftY}px, 0) rotate(${rotate}deg) rotateY(${drag.x / 40}deg) rotateX(${-liftY / 40}deg) scale(${scale})`,
+                  : `translate3d(${drag.x}px, ${liftY}px, 0) rotate(${rotate}deg) rotateY(${drag.x / tuning.perspective}deg) rotateX(${-liftY / tuning.perspective}deg) scale(${scale})`,
                 transition: drag.dragging
                   ? "none"
                   : flying
@@ -193,7 +192,7 @@ export default function Discover() {
               {/* 頭像 / Blind — 微視差 */}
               <div
                 className="absolute inset-0 flex items-center justify-center text-[140px] drop-shadow-2xl pointer-events-none"
-                style={{ transform: `translate(${drag.x * 0.08}px, ${liftY * 0.08}px)` }}
+                style={{ transform: `translate(${drag.x * tuning.parallax}px, ${liftY * tuning.parallax}px)` }}
               >
                 {mode === "blind" ? "🎭" : top.avatar}
               </div>
@@ -279,6 +278,7 @@ export default function Discover() {
           ))}
         </div>
 
+        <TuningPanel tuning={tuning} onChange={update} onReset={reset} />
         {match && <MatchModal person={match} onClose={() => setMatch(null)} onChat={() => { setMatch(null); nav(`/chat/${match.id}`); }} />}
         <TabBar />
       </div>
