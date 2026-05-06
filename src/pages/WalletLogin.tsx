@@ -2,24 +2,111 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "@/lib/store";
 import { PhoneShell } from "@/components/PhoneShell";
-import { Loader2, Mail, Sparkles, Wallet } from "lucide-react";
+import { AlertTriangle, Download, Loader2, Mail, RefreshCw, Sparkles, Wallet, X } from "lucide-react";
 
 type Step = 0 | 1 | 2 | 3;
+type WalletKind = "meta" | "trust";
+
+type FailKind = "not_installed" | "wrong_network" | "user_rejected" | "sign_failed" | "timeout";
+
+interface FailInfo {
+  kind: FailKind;
+  title: string;
+  message: string;
+  primaryLabel: string;
+  primaryAction: "retry" | "install" | "switch";
+  helpUrl?: string;
+}
+
+const FAIL_TEMPLATES: Record<FailKind, Omit<FailInfo, "kind">> = {
+  not_installed: {
+    title: "找不到錢包擴充功能",
+    message: "請先安裝錢包，然後重新整理頁面再試一次。",
+    primaryLabel: "前往安裝",
+    primaryAction: "install",
+  },
+  wrong_network: {
+    title: "目前不在 Ethereum 主網",
+    message: "請在錢包中切換到 Ethereum Mainnet（Chain ID: 1）後重試。",
+    primaryLabel: "切換網路並重試",
+    primaryAction: "switch",
+  },
+  user_rejected: {
+    title: "你取消了簽名請求",
+    message: "我們僅使用簽名驗證身份，不會動到任何資產。",
+    primaryLabel: "再試一次",
+    primaryAction: "retry",
+  },
+  sign_failed: {
+    title: "簽名驗證失敗",
+    message: "可能是網路不穩或錢包回應異常，請再試一次。",
+    primaryLabel: "再試一次",
+    primaryAction: "retry",
+  },
+  timeout: {
+    title: "錢包未回應",
+    message: "等候錢包回應逾時，請確認錢包視窗已開啟後重試。",
+    primaryLabel: "再試一次",
+    primaryAction: "retry",
+  },
+};
+
+// Simulate weighted random failures so each error path is reachable in the demo.
+function pickFailure(): FailKind | null {
+  const r = Math.random();
+  if (r < 0.04) return "not_installed";
+  if (r < 0.08) return "wrong_network";
+  if (r < 0.12) return "user_rejected";
+  if (r < 0.15) return "sign_failed";
+  if (r < 0.17) return "timeout";
+  return null;
+}
+
+const INSTALL_URL: Record<WalletKind, string> = {
+  meta: "https://metamask.io/download/",
+  trust: "https://trustwallet.com/download",
+};
 
 export default function WalletLogin() {
   const nav = useNavigate();
   const setWallet = useApp((s) => s.setWallet);
   const setStage = useApp((s) => s.setStage);
   const [step, setStep] = useState<Step>(0);
-  const [chosen, setChosen] = useState<"meta" | "trust" | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [chosen, setChosen] = useState<WalletKind | null>(null);
+  const [fail, setFail] = useState<FailInfo | null>(null);
 
-  const connect = async (kind: "meta" | "trust") => {
-    setChosen(kind); setError(null); setStep(1);
+  const reset = () => {
+    setStep(0);
+    setChosen(null);
+  };
+
+  const triggerFail = (kind: FailKind) => {
+    setFail({ kind, ...FAIL_TEMPLATES[kind] });
+    reset();
+  };
+
+  const connect = async (kind: WalletKind) => {
+    setChosen(kind);
+    setFail(null);
+    setStep(1);
+
+    // Step 1 — connect wallet (could fail with not_installed / user_rejected / timeout)
     await new Promise((r) => setTimeout(r, 1100));
+    const earlyFail = pickFailure();
+    if (earlyFail === "not_installed" || earlyFail === "timeout") {
+      triggerFail(earlyFail);
+      return;
+    }
+
     setStep(2);
+    // Step 2 — sign (could fail with wrong_network / user_rejected / sign_failed)
     await new Promise((r) => setTimeout(r, 1100));
-    if (Math.random() < 0.1) { setError("簽名驗證失敗，請再試一次"); setStep(0); setChosen(null); return; }
+    const lateFail = earlyFail ?? pickFailure();
+    if (lateFail && lateFail !== "not_installed" && lateFail !== "timeout") {
+      triggerFail(lateFail);
+      return;
+    }
+
     setStep(3);
     await new Promise((r) => setTimeout(r, 900));
     setWallet({ name: kind === "meta" ? "MetaMask" : "Trust Wallet", address: "0x1a2b···c3d4" });
@@ -27,7 +114,25 @@ export default function WalletLogin() {
     nav("/onboarding");
   };
 
-  const emailLogin = () => { setStage("onboarding"); nav("/onboarding"); };
+  const handleFailPrimary = () => {
+    if (!fail || !chosen) {
+      // Default: just dismiss
+      setFail(null);
+      return;
+    }
+    if (fail.primaryAction === "install") {
+      window.open(INSTALL_URL[chosen], "_blank", "noopener,noreferrer");
+      return;
+    }
+    // retry / switch — kick off connect again with same wallet
+    setFail(null);
+    connect(chosen);
+  };
+
+  const emailLogin = () => {
+    setStage("onboarding");
+    nav("/onboarding");
+  };
 
   return (
     <PhoneShell>
@@ -42,7 +147,46 @@ export default function WalletLogin() {
 
         {step === 0 && (
           <div className="w-full space-y-3 animate-slide-up">
-            {error && <p className="text-center text-sm text-rose animate-pop-in">{error}</p>}
+            {fail && (
+              <div
+                role="alert"
+                className="relative rounded-2xl border border-rose/30 bg-rose/10 p-4 pr-10 animate-pop-in"
+              >
+                <button
+                  onClick={() => setFail(null)}
+                  aria-label="關閉錯誤訊息"
+                  className="absolute top-2 right-2 p-1 rounded-md text-rose/80 hover:bg-rose/10"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="h-4 w-4 mt-0.5 text-rose shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-rose">{fail.title}</p>
+                    <p className="text-xs text-foreground/75 mt-1 leading-relaxed">{fail.message}</p>
+                    <div className="mt-3 flex gap-2">
+                      <button
+                        onClick={handleFailPrimary}
+                        className="press inline-flex items-center gap-1.5 rounded-lg bg-rose px-3 py-1.5 text-xs font-medium text-white"
+                      >
+                        {fail.primaryAction === "install" ? (
+                          <Download className="h-3.5 w-3.5" />
+                        ) : (
+                          <RefreshCw className="h-3.5 w-3.5" />
+                        )}
+                        {fail.primaryLabel}
+                      </button>
+                      <button
+                        onClick={emailLogin}
+                        className="press inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs text-foreground/80"
+                      >
+                        改用 Email
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
             <button
               onClick={() => connect("meta")}
               className="ripple press w-full rounded-2xl p-4 flex items-center gap-3 bg-gradient-to-r from-orange-500/90 to-amber-400/90 text-white font-medium shadow-soft hover-lift"
@@ -103,6 +247,12 @@ export default function WalletLogin() {
             <p className="text-center text-xs text-muted-foreground flex items-center justify-center gap-1">
               <Sparkles className="h-3 w-3" /> 正在以 {chosen === "meta" ? "MetaMask" : "Trust Wallet"} 安全登入…
             </p>
+            <button
+              onClick={reset}
+              className="mx-auto block text-[11px] text-muted-foreground/80 underline-offset-2 hover:underline"
+            >
+              取消並返回
+            </button>
           </div>
         )}
 
