@@ -22,33 +22,61 @@ export default function Discover() {
   const [quizStep, setQuizStep] = useState(0);
   const startRef = useRef({ x: 0, y: 0 });
 
+  const SWIPE_THRESHOLD = 120;          // 觸發門檻
+  const STAMP_FULL = 90;                // 戳記完全顯示距離
+  const [flying, setFlying] = useState<{ dir: 1 | -1 | 0; up?: boolean } | null>(null);
+
   const top = stack[0];
   const next2 = stack.slice(1, 3);
-  const rotate = drag.x / 14;
-  const likeOpacity = Math.max(0, Math.min(1, drag.x / 100));
-  const passOpacity = Math.max(0, Math.min(1, -drag.x / 100));
+
+  // 拖拽強度 0~1（採非線性 easeOut，初動更靈敏，越靠門檻越「重」）
+  const absX = Math.abs(drag.x);
+  const intensity = Math.min(1, absX / SWIPE_THRESHOLD);
+  const eased = 1 - Math.pow(1 - intensity, 2.2);
+
+  // 旋轉採對稱 sigmoid，避免甩出時抖動；最大 ±18deg
+  const rotate = (drag.x / SWIPE_THRESHOLD) * 18 * (1 - intensity * 0.25);
+  // 上拖（super like）小幅縮放
+  const liftY = drag.y < 0 ? Math.max(drag.y, -120) : drag.y * 0.35;
+  const scale = 1 + eased * 0.02;
+
+  // 戳記：採 STAMP_FULL 為基準，更早出現、更分明
+  const likeOpacity = Math.max(0, Math.min(1, drag.x / STAMP_FULL));
+  const passOpacity = Math.max(0, Math.min(1, -drag.x / STAMP_FULL));
+  const superOpacity = Math.max(0, Math.min(1, -liftY / 90)) * (Math.abs(drag.x) < 60 ? 1 : 0);
+  const stampActive = intensity >= 1;
 
   const handleAction = (kind: "like" | "pass" | "super") => {
     if (!top) return;
-    if (kind === "like" || kind === "super") {
-      if (Math.random() < 0.5) setMatch(top);
-    }
-    setHistory((h) => [top, ...h].slice(0, 5));
-    setStack((s) => s.slice(1));
-    setDrag({ x: 0, y: 0, dragging: false });
+    // 飛出動畫
+    setFlying({ dir: kind === "pass" ? -1 : 1, up: kind === "super" });
+    window.setTimeout(() => {
+      if (kind === "like" || kind === "super") {
+        if (Math.random() < 0.5) setMatch(top);
+      }
+      setHistory((h) => [top, ...h].slice(0, 5));
+      setStack((s) => s.slice(1));
+      setDrag({ x: 0, y: 0, dragging: false });
+      setFlying(null);
+    }, 280);
   };
 
   const onPointerDown = (e: React.PointerEvent) => {
+    if (flying) return;
     startRef.current = { x: e.clientX, y: e.clientY };
     setDrag({ x: 0, y: 0, dragging: true });
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
   };
   const onPointerMove = (e: React.PointerEvent) => {
     if (!drag.dragging) return;
-    setDrag({ x: e.clientX - startRef.current.x, y: e.clientY - startRef.current.y, dragging: true });
+    const dx = e.clientX - startRef.current.x;
+    const dy = e.clientY - startRef.current.y;
+    setDrag({ x: dx, y: dy, dragging: true });
   };
   const onPointerUp = () => {
-    if (Math.abs(drag.x) > 110) handleAction(drag.x > 0 ? "like" : "pass");
+    if (!drag.dragging) return;
+    if (drag.y < -90 && Math.abs(drag.x) < 80) handleAction("super");
+    else if (Math.abs(drag.x) > SWIPE_THRESHOLD) handleAction(drag.x > 0 ? "like" : "pass");
     else setDrag({ x: 0, y: 0, dragging: false });
   };
 
