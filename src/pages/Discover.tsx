@@ -278,6 +278,7 @@ export default function Discover() {
           ))}
         </div>
 
+        <TuningPanel tuning={tuning} onChange={update} onReset={reset} />
         {match && <MatchModal person={match} onClose={() => setMatch(null)} onChat={() => { setMatch(null); nav(`/chat/${match.id}`); }} />}
         <TabBar />
       </div>
