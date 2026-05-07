@@ -67,6 +67,30 @@ export default function Membership() {
     });
   }, [wallet?.address, contractAddr]);
 
+  // 監聽合約 Subscribed 事件 — 即時更新等級/到期日
+  useEffect(() => {
+    if (!wallet?.address || !contractAddr) return;
+    let cancelled = false;
+    let off: (() => void) | null = null;
+    listenSubscribed(wallet.address, (ev) => {
+      if (cancelled) return;
+      setMyTier(ev.tier);
+      setMyExpires(ev.newExpiresAt);
+      if (ev.txHash) setTxHash(ev.txHash);
+      setStep("done");
+      toast.success(
+        `已升級到 ${TIER_NAME[ev.tier]} · 到期 ${new Date(ev.newExpiresAt * 1000).toLocaleDateString()}`,
+      );
+    }).then((unsub) => {
+      if (cancelled) unsub();
+      else off = unsub;
+    });
+    return () => {
+      cancelled = true;
+      off?.();
+    };
+  }, [wallet?.address, contractAddr, chainId]);
+
   const onPay = async () => {
     if (!hasWallet()) { toast.error("找不到錢包，請安裝 MetaMask"); return; }
     if (wrongChain) { toast.error("請切換到支援的以太鏈"); return; }
