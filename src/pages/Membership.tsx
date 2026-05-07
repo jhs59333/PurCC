@@ -4,7 +4,7 @@ import { PhoneShell } from "@/components/PhoneShell";
 import { ArrowLeft, Check, Crown, Sparkles, Network, AlertTriangle } from "lucide-react";
 import {
   SUPPORTED_CHAINS, MEMBERSHIP_CONTRACTS, hasWallet, getChainId, switchChain,
-  subscribe, formatEther, quotePrice, fetchMyMembership, TIER_NAME, type Tier,
+  subscribe, formatEther, quotePrice, fetchMyMembership, listenSubscribed, TIER_NAME, type Tier,
 } from "@/lib/contract";
 import { useApp } from "@/lib/store";
 import { toast } from "sonner";
