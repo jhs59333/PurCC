@@ -4,7 +4,7 @@ import { PhoneShell } from "@/components/PhoneShell";
 import { ArrowLeft, Check, Crown, Sparkles, Network, AlertTriangle } from "lucide-react";
 import {
   SUPPORTED_CHAINS, MEMBERSHIP_CONTRACTS, hasWallet, getChainId, switchChain,
-  subscribe, formatEther, quotePrice, fetchMyMembership, TIER_NAME, type Tier,
+  subscribe, formatEther, quotePrice, fetchMyMembership, listenSubscribed, TIER_NAME, type Tier,
 } from "@/lib/contract";
 import { useApp } from "@/lib/store";
 import { toast } from "sonner";
@@ -66,6 +66,30 @@ export default function Membership() {
       setMyExpires(m.expiresAt);
     });
   }, [wallet?.address, contractAddr]);
+
+  // 監聽合約 Subscribed 事件 — 即時更新等級/到期日
+  useEffect(() => {
+    if (!wallet?.address || !contractAddr) return;
+    let cancelled = false;
+    let off: (() => void) | null = null;
+    listenSubscribed(wallet.address, (ev) => {
+      if (cancelled) return;
+      setMyTier(ev.tier);
+      setMyExpires(ev.newExpiresAt);
+      if (ev.txHash) setTxHash(ev.txHash);
+      setStep("done");
+      toast.success(
+        `已升級到 ${TIER_NAME[ev.tier]} · 到期 ${new Date(ev.newExpiresAt * 1000).toLocaleDateString()}`,
+      );
+    }).then((unsub) => {
+      if (cancelled) unsub();
+      else off = unsub;
+    });
+    return () => {
+      cancelled = true;
+      off?.();
+    };
+  }, [wallet?.address, contractAddr, chainId]);
 
   const onPay = async () => {
     if (!hasWallet()) { toast.error("找不到錢包，請安裝 MetaMask"); return; }

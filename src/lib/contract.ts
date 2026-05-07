@@ -144,4 +144,56 @@ export async function fetchMyMembership(addr: string) {
   }
 }
 
+export type SubscribedEvent = {
+  user: string;
+  tier: Tier;
+  monthsAdded: number;
+  newExpiresAt: number;
+  paid: bigint;
+  txHash: string;
+};
+
+/**
+ * 監聽指定地址的 Subscribed 事件，回傳取消訂閱函式。
+ * 若合約尚未部署或無錢包，回傳 no-op。
+ */
+export async function listenSubscribed(
+  userAddr: string,
+  cb: (e: SubscribedEvent) => void,
+): Promise<() => void> {
+  try {
+    if (!hasWallet() || !userAddr) return () => {};
+    const chainId = await getChainId();
+    const addr = MEMBERSHIP_CONTRACTS[chainId];
+    if (!addr) return () => {};
+    const provider = await getProvider();
+    const contract = new Contract(addr, MEMBERSHIP_ABI, provider);
+    // 用 indexed user 過濾，僅監聽自己的事件
+    const filter = contract.filters.Subscribed(userAddr);
+    const handler = (
+      user: string,
+      tier: bigint,
+      monthsAdded: bigint,
+      newExpiresAt: bigint,
+      paid: bigint,
+      ev: any,
+    ) => {
+      cb({
+        user,
+        tier: Number(tier) as Tier,
+        monthsAdded: Number(monthsAdded),
+        newExpiresAt: Number(newExpiresAt),
+        paid,
+        txHash: ev?.log?.transactionHash ?? ev?.transactionHash ?? "",
+      });
+    };
+    contract.on(filter, handler);
+    return () => {
+      try { contract.off(filter, handler); } catch {}
+    };
+  } catch {
+    return () => {};
+  }
+}
+
 export { formatEther, parseEther };
