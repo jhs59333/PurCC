@@ -99,7 +99,10 @@ export default function Membership() {
       setStep("paying");
       setTimeout(() => {
         setTxHash("0xDEMO" + Math.random().toString(16).slice(2, 10));
+        setMyTier(sel.tier as Tier);
+        setMyExpires(Math.floor(Date.now() / 1000) + (yearly ? 365 : 30) * 86400);
         setStep("done");
+        toast.success(`(Demo) 已升級到 ${sel.name}`);
       }, 2200);
       return;
     }
