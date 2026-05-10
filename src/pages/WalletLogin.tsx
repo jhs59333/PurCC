@@ -52,13 +52,14 @@ const FAIL_TEMPLATES: Record<FailKind, Omit<FailInfo, "kind">> = {
 };
 
 // Simulate weighted random failures so each error path is reachable in the demo.
+// 失敗率刻意壓低（總計 ~6%），避免面試 demo 一直被卡。
 function pickFailure(): FailKind | null {
   const r = Math.random();
-  if (r < 0.04) return "not_installed";
-  if (r < 0.08) return "wrong_network";
-  if (r < 0.12) return "user_rejected";
-  if (r < 0.15) return "sign_failed";
-  if (r < 0.17) return "timeout";
+  if (r < 0.015) return "not_installed";
+  if (r < 0.030) return "wrong_network";
+  if (r < 0.045) return "user_rejected";
+  if (r < 0.055) return "sign_failed";
+  if (r < 0.060) return "timeout";
   return null;
 }
 
