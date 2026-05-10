@@ -92,17 +92,19 @@ export default function Membership() {
   }, [wallet?.address, contractAddr, chainId]);
 
   const onPay = async () => {
-    if (!hasWallet()) { toast.error("找不到錢包，請安裝 MetaMask"); return; }
-    if (wrongChain) { toast.error("請切換到支援的以太鏈"); return; }
-    if (!contractAddr) {
-      // demo 模式 — 模擬上鏈
+    // 沒錢包或合約尚未部署 → 走 demo 模式（面試展示用）
+    if (!hasWallet() || !contractAddr) {
       setStep("paying");
       setTimeout(() => {
         setTxHash("0xDEMO" + Math.random().toString(16).slice(2, 10));
+        setMyTier(sel.tier as Tier);
+        setMyExpires(Math.floor(Date.now() / 1000) + (yearly ? 365 : 30) * 86400);
         setStep("done");
+        toast.success(`(Demo) 已升級到 ${sel.name}`);
       }, 2200);
       return;
     }
+    if (wrongChain) { toast.error("請切換到支援的以太鏈"); return; }
     setStep("paying");
     try {
       const tx = await subscribe(sel.tier, { yearly });

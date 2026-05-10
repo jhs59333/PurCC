@@ -15,6 +15,7 @@ import Community from "./pages/Community";
 import Profile from "./pages/Profile";
 import Membership from "./pages/Membership";
 import Notifications from "./pages/Notifications";
+import { RequireStage } from "./components/RequireStage";
 
 const queryClient = new QueryClient();
 
@@ -27,15 +28,15 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<WalletLogin />} />
-          <Route path="/onboarding" element={<Onboarding />} />
-          <Route path="/discover" element={<Discover />} />
-          <Route path="/matches" element={<Matches />} />
-          <Route path="/chat/:id" element={<Chat />} />
-          <Route path="/agent" element={<Agent />} />
-          <Route path="/community" element={<Community />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/membership" element={<Membership />} />
-          <Route path="/notifications" element={<Notifications />} />
+          <Route path="/onboarding" element={<RequireStage need="onboarding"><Onboarding /></RequireStage>} />
+          <Route path="/discover" element={<RequireStage need="app"><Discover /></RequireStage>} />
+          <Route path="/matches" element={<RequireStage need="app"><Matches /></RequireStage>} />
+          <Route path="/chat/:id" element={<RequireStage need="app"><Chat /></RequireStage>} />
+          <Route path="/agent" element={<RequireStage need="app"><Agent /></RequireStage>} />
+          <Route path="/community" element={<RequireStage need="app"><Community /></RequireStage>} />
+          <Route path="/profile" element={<RequireStage need="app"><Profile /></RequireStage>} />
+          <Route path="/membership" element={<RequireStage need="app"><Membership /></RequireStage>} />
+          <Route path="/notifications" element={<RequireStage need="app"><Notifications /></RequireStage>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

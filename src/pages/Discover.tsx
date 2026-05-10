@@ -85,6 +85,18 @@ export default function Discover() {
     setHistory((h) => h.slice(1));
   };
 
+  const reload = () => {
+    setStack(PEOPLE);
+    setHistory([]);
+    setDrag({ x: 0, y: 0, dragging: false });
+  };
+
+  // 切換模式時重置 quiz
+  const switchMode = (k: Mode) => {
+    setMode(k);
+    if (k !== "quiz") setQuizStep(0);
+  };
+
   const commonTags = useMemo(() => top ? top.tags.filter((t) => myTags.includes(t)) : [], [top, myTags]);
 
   return (
@@ -102,7 +114,7 @@ export default function Discover() {
           ].map(({ k, label, icon: Icon }) => (
             <button
               key={k}
-              onClick={() => setMode(k as Mode)}
+              onClick={() => switchMode(k as Mode)}
               className={`ripple press shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border transition ${
                 mode === k ? "bg-gradient-primary text-primary-foreground border-transparent shadow-glow" : "border-border text-muted-foreground"
               }`}
@@ -124,11 +136,17 @@ export default function Discover() {
 
         {/* 卡片堆 */}
         <div className="relative flex-1 mx-5 mt-2 mb-2" style={{ perspective: "1200px" }}>
-          {!top && (
+          {!top && mode !== "quiz" && (
             <div className="h-full grid place-items-center text-center animate-pop-in">
               <div>
                 <div className="text-5xl mb-3">🌙</div>
                 <p className="text-muted-foreground">今天先到這裡<br />明天再為你帶來新朋友</p>
+                <button
+                  onClick={reload}
+                  className="ripple press mt-5 inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-gradient-primary text-primary-foreground text-xs font-bold shadow-glow"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" /> 重新整理推薦
+                </button>
               </div>
             </div>
           )}

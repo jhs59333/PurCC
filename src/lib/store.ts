@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
 
 type Stage = "wallet" | "onboarding" | "app";
 
@@ -13,17 +14,31 @@ type State = {
   setNickname: (n: string) => void;
   setTags: (t: string[]) => void;
   setPhotos: (n: number) => void;
+  reset: () => void;
 };
 
-export const useApp = create<State>((set) => ({
-  stage: "wallet",
+const initial = {
+  stage: "wallet" as Stage,
   wallet: null,
   nickname: "",
-  tags: [],
+  tags: [] as string[],
   photos: 0,
-  setStage: (stage) => set({ stage }),
-  setWallet: (wallet) => set({ wallet }),
-  setNickname: (nickname) => set({ nickname }),
-  setTags: (tags) => set({ tags }),
-  setPhotos: (photos) => set({ photos }),
-}));
+};
+
+export const useApp = create<State>()(
+  persist(
+    (set) => ({
+      ...initial,
+      setStage: (stage) => set({ stage }),
+      setWallet: (wallet) => set({ wallet }),
+      setNickname: (nickname) => set({ nickname }),
+      setTags: (tags) => set({ tags }),
+      setPhotos: (photos) => set({ photos }),
+      reset: () => set(initial),
+    }),
+    {
+      name: "purcc-app",
+      storage: createJSONStorage(() => localStorage),
+    },
+  ),
+);
