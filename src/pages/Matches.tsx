@@ -22,14 +22,15 @@ export default function Matches() {
           <h2 className="text-sm font-medium text-muted-foreground mb-3">最新配對</h2>
           <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2 -mx-5 px-5">
             {newMatches.map((p, i) => (
-              <Link key={p.id} to={`/chat/${p.id}`} style={{ animationDelay: `${i * 60}ms` }}
-                className="shrink-0 w-20 text-center animate-tag-bounce press">
-                <div className={`relative aspect-square rounded-2xl overflow-hidden bg-gradient-to-br ${p.color} shadow-soft hover-lift`}>
-                  <img src={p.photo} alt={p.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
-                  <div className="absolute -bottom-1 -right-1 z-10"><WarmthRing value={p.warmth} size={28} stroke={3} /></div>
-                </div>
-                <p className="mt-2 text-xs truncate">{p.name}</p>
-              </Link>
+              <div key={p.id} style={{ animationDelay: `${i * 60}ms` }} className="shrink-0 w-20 text-center animate-tag-bounce">
+                <Link to={`/people/${p.id}`} className="press block">
+                  <div className={`relative aspect-square rounded-2xl overflow-hidden bg-gradient-to-br ${p.color} shadow-soft hover-lift`}>
+                    <img src={p.photo} alt={p.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
+                    <div className="absolute -bottom-1 -right-1 z-10"><WarmthRing value={p.warmth} size={28} stroke={3} /></div>
+                  </div>
+                  <p className="mt-2 text-xs truncate">{p.name}</p>
+                </Link>
+              </div>
             ))}
           </div>
         </section>
@@ -40,10 +41,10 @@ export default function Matches() {
             {chats.map((p, i) => (
               <li key={p.id} style={{ animationDelay: `${i * 50}ms` }} className="animate-slide-up">
                 <Link to={`/chat/${p.id}`} className="press flex items-center gap-3 p-3 rounded-2xl hover:bg-primary/10 transition">
-                  <div className={`relative h-12 w-12 rounded-full overflow-hidden bg-gradient-to-br ${p.color}`}>
+                <Link to={`/people/${p.id}`} onClick={(e) => e.stopPropagation()} className={`relative h-12 w-12 rounded-full overflow-hidden bg-gradient-to-br ${p.color} press shrink-0`}>
                     <img src={p.photo} alt={p.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
                     {i % 3 === 0 && <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-success border-2 border-background animate-pulse-dot" />}
-                  </div>
+                  </Link>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
                       <p className="font-medium truncate">{p.name}</p>
