@@ -1,4 +1,13 @@
 // Mock data for PurCC
+import girl1 from "@/assets/girl1.jpg";
+import girl2 from "@/assets/girl2.jpg";
+import girl3 from "@/assets/girl3.jpg";
+import girl4 from "@/assets/girl4.jpg";
+import girl5 from "@/assets/girl5.jpg";
+import girl6 from "@/assets/girl6.jpg";
+import girl7 from "@/assets/girl7.jpg";
+import girl8 from "@/assets/girl8.jpg";
+
 export type Person = {
   id: string;
   name: string;
@@ -10,8 +19,11 @@ export type Person = {
   tags: string[];
   prompt: { q: string; a: string };
   avatar: string; // emoji as placeholder
+  photo: string; // AI-generated portrait
   color: string;
 };
+
+const PHOTOS = [girl1, girl2, girl3, girl4, girl5, girl6, girl7, girl8];
 
 export const ALL_TAGS = [
   "咖啡控","旅行","電影","攝影","健身","閱讀","音樂","美食",
@@ -44,6 +56,7 @@ export const PEOPLE: Person[] = Array.from({ length: 12 }).map((_, i) => ({
   tags: [ALL_TAGS[i % 16], ALL_TAGS[(i + 3) % 16], ALL_TAGS[(i + 7) % 16], ALL_TAGS[(i + 11) % 16]],
   prompt: prompts[i % prompts.length],
   avatar: avatars[i % avatars.length],
+  photo: PHOTOS[i % PHOTOS.length],
   color: palette[i % palette.length],
 }));
 
