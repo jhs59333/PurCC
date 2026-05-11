@@ -62,10 +62,10 @@ export default function Chat() {
         {/* Header */}
         <header className="h-16 px-3 flex items-center gap-3 border-b border-border/50 glass-strong shrink-0">
           <Link to="/matches" className="press p-2 rounded-full hover:bg-primary/10"><ArrowLeft className="h-5 w-5" /></Link>
-          <div className={`relative h-10 w-10 rounded-full overflow-hidden bg-gradient-to-br ${person.color}`}>
+          <Link to={`/people/${person.id}`} className={`relative h-10 w-10 rounded-full overflow-hidden bg-gradient-to-br ${person.color} press`}>
             <img src={person.photo} alt={person.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
             <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-success border-2 border-background animate-pulse-dot" />
-          </div>
+          </Link>
           <div className="flex-1">
             <p className="font-medium text-sm">{person.name}</p>
             <p className="text-[11px] text-muted-foreground">線上 · 24h 倒數中</p>

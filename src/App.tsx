@@ -10,6 +10,7 @@ import Onboarding from "./pages/Onboarding";
 import Discover from "./pages/Discover";
 import Matches from "./pages/Matches";
 import Chat from "./pages/Chat";
+import PersonProfile from "./pages/PersonProfile";
 import Agent from "./pages/Agent";
 import Community from "./pages/Community";
 import Profile from "./pages/Profile";
@@ -32,6 +33,7 @@ const App = () => (
           <Route path="/discover" element={<RequireStage need="app"><Discover /></RequireStage>} />
           <Route path="/matches" element={<RequireStage need="app"><Matches /></RequireStage>} />
           <Route path="/chat/:id" element={<RequireStage need="app"><Chat /></RequireStage>} />
+          <Route path="/people/:id" element={<RequireStage need="app"><PersonProfile /></RequireStage>} />
           <Route path="/agent" element={<RequireStage need="app"><Agent /></RequireStage>} />
           <Route path="/community" element={<RequireStage need="app"><Community /></RequireStage>} />
           <Route path="/profile" element={<RequireStage need="app"><Profile /></RequireStage>} />
