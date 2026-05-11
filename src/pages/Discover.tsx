@@ -207,13 +207,31 @@ export default function Discover() {
                 }}
               />
 
-              {/* 頭像 / Blind — 微視差 */}
-              <div
-                className="absolute inset-0 flex items-center justify-center text-[140px] drop-shadow-2xl pointer-events-none"
-                style={{ transform: `translate(${drag.x * tuning.parallax}px, ${liftY * tuning.parallax}px)` }}
-              >
-                {mode === "blind" ? "🎭" : top.avatar}
-              </div>
+              {/* 照片 / Blind — 微視差 */}
+              {mode === "blind" ? (
+                <div
+                  className="absolute inset-0 flex items-center justify-center text-[140px] drop-shadow-2xl pointer-events-none"
+                  style={{ transform: `translate(${drag.x * tuning.parallax}px, ${liftY * tuning.parallax}px)` }}
+                >
+                  🎭
+                </div>
+              ) : (
+                <div
+                  className="absolute inset-0 overflow-hidden pointer-events-none"
+                  style={{ transform: `translate(${drag.x * tuning.parallax * 0.6}px, ${liftY * tuning.parallax * 0.6}px) scale(1.08)` }}
+                >
+                  <img
+                    src={top.photo}
+                    alt={`${top.name} 的照片`}
+                    width={768}
+                    height={1024}
+                    loading="lazy"
+                    draggable={false}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/10" />
+                </div>
+              )}
 
               {/* LIKE / PASS / SUPER 戳記 — 隨強度縮放 + 觸發時發光 */}
               <div
