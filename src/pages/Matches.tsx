@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { PhoneShell } from "@/components/PhoneShell";
 import { TabBar } from "@/components/TabBar";
 import { AppHeader } from "@/components/AppHeader";
@@ -7,6 +7,7 @@ import { WarmthRing } from "@/components/WarmthRing";
 import { Clock } from "lucide-react";
 
 export default function Matches() {
+  const nav = useNavigate();
   const newMatches = PEOPLE.slice(0, 6);
   const chats = PEOPLE.slice(0, 8);
   const previews = ["哈囉～你也喜歡爬山！", "你今天有空嗎？", "❤️", "看到你的照片，超有質感", "明天一起去咖啡廳？", "晚安 🌙", "...", "謝謝你的 Super Like！"];
@@ -40,7 +41,7 @@ export default function Matches() {
           <ul className="space-y-1">
             {chats.map((p, i) => (
               <li key={p.id} style={{ animationDelay: `${i * 50}ms` }} className="animate-slide-up">
-                <div onClick={() => (window.location.href = `/chat/${p.id}`)} className="cursor-pointer press flex items-center gap-3 p-3 rounded-2xl hover:bg-primary/10 transition">
+                <div onClick={() => nav(`/chat/${p.id}`)} className="cursor-pointer press flex items-center gap-3 p-3 rounded-2xl hover:bg-primary/10 transition">
                   <Link to={`/people/${p.id}`} onClick={(e) => e.stopPropagation()} className={`relative h-12 w-12 rounded-full overflow-hidden bg-gradient-to-br ${p.color} press shrink-0`}>
                     <img src={p.photo} alt={p.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
                     {i % 3 === 0 && <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-success border-2 border-background animate-pulse-dot" />}
