@@ -1,15 +1,23 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { PhoneShell } from "@/components/PhoneShell";
 import { PEOPLE } from "@/lib/mock";
 import { WarmthRing } from "@/components/WarmthRing";
-import { ArrowLeft, Mic, Send, Smile, Sparkles, X } from "lucide-react";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
+import { ReportSheet } from "@/components/ReportSheet";
+import { detectScam, rateLimit, isRepeating } from "@/lib/antifraud";
+import { useApp } from "@/lib/store";
+import { ArrowLeft, Mic, MoreVertical, Send, ShieldAlert, Smile, Sparkles, X } from "lucide-react";
+import { toast } from "sonner";
 
-type Msg = { id: string; text: string; mine: boolean; loved?: boolean };
+type Msg = { id: string; text: string; mine: boolean; loved?: boolean; flagged?: boolean };
 
 export default function Chat() {
   const { id } = useParams();
   const person = PEOPLE.find((p) => p.id === id) ?? PEOPLE[0];
+  const { blocked } = useApp();
+  const isBlocked = blocked.includes(person.id);
+
   const [msgs, setMsgs] = useState<Msg[]>([
     { id: "m1", text: `嗨！很高興認識你 👋`, mine: false },
     { id: "m2", text: "你好～看到你也喜歡攝影！", mine: true },
@@ -21,8 +29,18 @@ export default function Chat() {
   const [recording, setRecording] = useState(false);
   const [recSec, setRecSec] = useState(0);
   const [floats, setFloats] = useState<{ id: number; x: number; y: number }[]>([]);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [pendingScam, setPendingScam] = useState<{ text: string; reasons: string[] } | null>(null);
+  const sendHistory = useRef<number[]>([]);
+  const textHistory = useRef<string[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const aiSugs = ["哈哈，我也是！", "週末有空一起拍照嗎？", "你都用什麼相機？"];
+
+  // 偵測對方是否傳出可疑內容
+  const incomingRiskCount = useMemo(
+    () => msgs.filter((m) => !m.mine && m.flagged).length,
+    [msgs]
+  );
 
   useEffect(() => { scrollRef.current?.scrollTo({ top: 99999, behavior: "smooth" }); }, [msgs, typing]);
   useEffect(() => {
@@ -31,15 +49,47 @@ export default function Chat() {
     return () => clearInterval(t);
   }, [recording]);
 
-  const send = (t: string) => {
+  const doSend = (t: string, force = false) => {
     if (!t.trim()) return;
+    if (isBlocked) { toast.error("你已封鎖此用戶，無法發送訊息"); return; }
+
+    // 速率限制（反機器人）
+    const wait = rateLimit(sendHistory.current);
+    if (wait > 0) { toast.error(`發送過於頻繁，請等 ${wait} 秒`); return; }
+
+    // 重複訊息偵測
+    if (isRepeating(textHistory.current, t)) {
+      toast.error("偵測到重複訊息，請勿洗版");
+      return;
+    }
+
+    // 詐騙關鍵字偵測
+    if (!force) {
+      const hits = detectScam(t);
+      if (hits.length) {
+        setPendingScam({ text: t, reasons: [...new Set(hits.map((h) => h.reason))] });
+        return;
+      }
+    }
+
+    sendHistory.current = [...sendHistory.current, Date.now()].slice(-12);
+    textHistory.current = [...textHistory.current, t].slice(-5);
+
     setMsgs((m) => [...m, { id: Math.random().toString(), text: t, mine: true }]);
     setText("");
     setTyping(true);
     setTimeout(() => {
       setTyping(false);
-      setMsgs((m) => [...m, { id: Math.random().toString(), text: ["真的嗎！", "我也這樣覺得 😊", "好哦！週末約？", "嘿嘿，被你發現了"][Math.floor(Math.random() * 4)], mine: false }]);
+      const reply = ["真的嗎！", "我也這樣覺得 😊", "好哦！週末約？", "嘿嘿，被你發現了"][Math.floor(Math.random() * 4)];
+      setMsgs((m) => [...m, { id: Math.random().toString(), text: reply, mine: false }]);
     }, 1500);
+  };
+
+  const send = (t: string) => doSend(t, false);
+  const confirmSendScam = () => {
+    if (!pendingScam) return;
+    doSend(pendingScam.text, true);
+    setPendingScam(null);
   };
 
   const doubleTap = (e: React.MouseEvent, m: Msg) => {
@@ -66,15 +116,36 @@ export default function Chat() {
             <img src={person.photo} alt={person.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
             <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-success border-2 border-background animate-pulse-dot" />
           </Link>
-          <div className="flex-1">
-            <p className="font-medium text-sm">{person.name}</p>
+          <div className="flex-1 min-w-0">
+            <p className="font-medium text-sm flex items-center gap-1">
+              <span className="truncate">{person.name}</span>
+              <VerifiedBadge verified={person.verified} size="xs" />
+            </p>
             <p className="text-[11px] text-muted-foreground">線上 · 24h 倒數中</p>
           </div>
           <WarmthRing value={person.warmth} size={36} stroke={3} />
+          <button onClick={() => setReportOpen(true)} className="press p-2 rounded-full hover:bg-primary/10" aria-label="安全選項">
+            <MoreVertical className="h-5 w-5" />
+          </button>
         </header>
         <div className="h-1 bg-warning/30 relative shrink-0">
           <div className="h-full bg-gradient-to-r from-warning to-rose w-1/3" />
         </div>
+
+        {/* 未驗證 / 高風險警告 */}
+        {(!person.verified || incomingRiskCount > 0) && (
+          <div className="mx-3 mt-2 rounded-xl border border-warning/50 bg-warning/10 p-2.5 flex gap-2 items-start animate-slide-down">
+            <ShieldAlert className="h-4 w-4 text-warning shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-[11px] font-medium text-warning">
+                {!person.verified ? "對方尚未通過真人驗證" : "偵測到可疑內容"}
+              </p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                請勿透露個資、轉帳或加入任何外部群組。
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* AI 建議 */}
         {showAi && (
@@ -104,7 +175,10 @@ export default function Chat() {
                   m.mine
                     ? "bg-gradient-primary text-primary-foreground rounded-br-md animate-bubble-in-me"
                     : "glass border border-border rounded-bl-md animate-bubble-in"
-                }`}>
+                } ${m.flagged ? "ring-2 ring-warning/60" : ""}`}>
+                {m.flagged && (
+                  <span className="absolute -top-2 -left-1 text-[10px] px-1.5 py-0.5 rounded bg-warning text-background font-bold">⚠ 可疑</span>
+                )}
                 {m.text}
                 {m.loved && <span className="absolute -top-2 -right-1 text-sm">💜</span>}
               </div>
@@ -126,7 +200,11 @@ export default function Chat() {
 
         {/* 輸入區 */}
         <div className="p-3 border-t border-border/50 glass-strong shrink-0">
-          {recording ? (
+          {isBlocked ? (
+            <div className="text-center text-xs text-muted-foreground py-3">
+              你已封鎖此用戶 · <button onClick={() => setReportOpen(true)} className="text-primary-glow underline">管理</button>
+            </div>
+          ) : recording ? (
             <div className="flex items-center gap-3 h-12">
               <button onClick={stopRec} className="ripple press h-10 w-10 rounded-full bg-rose grid place-items-center text-white">●</button>
               <div className="flex-1 flex items-end gap-0.5 h-8">
@@ -165,6 +243,39 @@ export default function Chat() {
             </div>
           )}
         </div>
+
+        {/* 詐騙關鍵字攔截確認 */}
+        {pendingScam && (
+          <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-sm grid place-items-center p-6 animate-pop-in" onClick={() => setPendingScam(null)}>
+            <div onClick={(e) => e.stopPropagation()} className="w-full max-w-sm rounded-3xl glass-strong border border-warning/50 p-5 space-y-4">
+              <div className="flex items-center gap-2">
+                <ShieldAlert className="h-6 w-6 text-warning" />
+                <p className="font-bold">這則訊息可能含有風險</p>
+              </div>
+              <ul className="text-sm text-muted-foreground space-y-1">
+                {pendingScam.reasons.map((r) => <li key={r}>· {r}</li>)}
+              </ul>
+              <p className="text-xs text-muted-foreground">
+                提醒你：絕對不要透露個資、轉帳或加入外部群組。詐騙者常以投資、感情為由誘騙。
+              </p>
+              <div className="flex gap-2">
+                <button onClick={() => setPendingScam(null)} className="press flex-1 py-3 rounded-xl border border-border text-sm">
+                  取消
+                </button>
+                <button onClick={confirmSendScam} className="press flex-1 py-3 rounded-xl bg-warning/20 border border-warning text-warning text-sm font-medium">
+                  仍要發送
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <ReportSheet
+          personId={person.id}
+          personName={person.name}
+          open={reportOpen}
+          onClose={() => setReportOpen(false)}
+        />
       </div>
     </PhoneShell>
   );
