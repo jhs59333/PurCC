@@ -10,7 +10,7 @@ import { Camera, Crown, Edit3, LogOut, Plus, Settings, ShieldCheck, Wallet, X } 
 
 export default function Profile() {
   const nav = useNavigate();
-  const { wallet, nickname, tags: myTags, setTags, setStage } = useApp();
+  const { wallet, nickname, tags: myTags, setTags, setStage, verified } = useApp();
   const tags = myTags.length ? myTags : ME.tags;
   const [editing, setEditing] = useState(false);
   const [bio, setBio] = useState(ME.bio);
@@ -40,7 +40,13 @@ export default function Profile() {
               <div className="flex-1">
                 <p className="text-xl font-bold">{nickname || ME.name} <span className="text-base text-muted-foreground">· {ME.age}</span></p>
                 <p className="text-xs text-muted-foreground mt-0.5">{ME.mbti} · 信任 {ME.trust}</p>
-                <p className="mt-1 text-[11px] flex items-center gap-1 text-success"><ShieldCheck className="h-3 w-3" /> 已驗證身份</p>
+                {verified ? (
+                  <p className="mt-1 text-[11px] flex items-center gap-1 text-success"><ShieldCheck className="h-3 w-3" /> 已通過真人驗證</p>
+                ) : (
+                  <button onClick={() => nav("/verify")} className="press mt-1 text-[11px] flex items-center gap-1 text-warning underline">
+                    <ShieldCheck className="h-3 w-3" /> 尚未驗證 · 立即驗證
+                  </button>
+                )}
               </div>
               <WarmthRing value={ME.warmth} size={56} stroke={5} />
             </div>

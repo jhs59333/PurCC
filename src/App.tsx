@@ -16,6 +16,7 @@ import Community from "./pages/Community";
 import Profile from "./pages/Profile";
 import Membership from "./pages/Membership";
 import Notifications from "./pages/Notifications";
+import Verify from "./pages/Verify";
 import { RequireStage } from "./components/RequireStage";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<WalletLogin />} />
           <Route path="/onboarding" element={<RequireStage need="onboarding"><Onboarding /></RequireStage>} />
+          <Route path="/verify" element={<RequireStage need="verify"><Verify /></RequireStage>} />
           <Route path="/discover" element={<RequireStage need="app"><Discover /></RequireStage>} />
           <Route path="/matches" element={<RequireStage need="app"><Matches /></RequireStage>} />
           <Route path="/chat/:id" element={<RequireStage need="app"><Chat /></RequireStage>} />
