@@ -21,6 +21,8 @@ export type Person = {
   avatar: string; // emoji as placeholder
   photo: string; // AI-generated portrait
   color: string;
+  verified: boolean; // 是否通過真人驗證
+  trust: number; // 信任分數 0-100
 };
 
 const PHOTOS = [girl1, girl2, girl3, girl4, girl5, girl6, girl7, girl8];
@@ -58,6 +60,8 @@ export const PEOPLE: Person[] = Array.from({ length: 12 }).map((_, i) => ({
   avatar: avatars[i % avatars.length],
   photo: PHOTOS[i % PHOTOS.length],
   color: palette[i % palette.length],
+  verified: i % 7 !== 0, // 大多數已驗證，少數未驗證以示對比
+  trust: 70 + ((i * 5) % 30),
 }));
 
 export const ME = {
