@@ -4,12 +4,16 @@ import { TabBar } from "@/components/TabBar";
 import { AppHeader } from "@/components/AppHeader";
 import { PEOPLE } from "@/lib/mock";
 import { WarmthRing } from "@/components/WarmthRing";
-import { Clock } from "lucide-react";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
+import { useApp } from "@/lib/store";
+import { Clock, ShieldCheck } from "lucide-react";
 
 export default function Matches() {
   const nav = useNavigate();
-  const newMatches = PEOPLE.slice(0, 6);
-  const chats = PEOPLE.slice(0, 8);
+  const blocked = useApp((s) => s.blocked);
+  const visible = PEOPLE.filter((p) => !blocked.includes(p.id));
+  const newMatches = visible.slice(0, 6);
+  const chats = visible.slice(0, 8);
   const previews = ["哈囉～你也喜歡爬山！", "你今天有空嗎？", "❤️", "看到你的照片，超有質感", "明天一起去咖啡廳？", "晚安 🌙", "...", "謝謝你的 Super Like！"];
   const times = ["剛剛", "5 分鐘前", "1 小時前", "今天", "昨天", "週一", "12/3", "11/29"];
   const unread = [2, 0, 1, 0, 5, 0, 0, 0];
@@ -18,6 +22,12 @@ export default function Matches() {
     <PhoneShell>
       <div className="h-full flex flex-col">
         <AppHeader title="朋友" />
+
+        {blocked.length > 0 && (
+          <div className="mx-5 mt-2 text-[11px] text-muted-foreground flex items-center gap-1">
+            <ShieldCheck className="h-3 w-3 text-success" /> 已封鎖 {blocked.length} 位用戶
+          </div>
+        )}
 
         <section className="px-5 pt-2 animate-slide-up">
           <h2 className="text-sm font-medium text-muted-foreground mb-3">最新配對</h2>
@@ -28,8 +38,15 @@ export default function Matches() {
                   <div className={`relative aspect-square rounded-2xl overflow-hidden bg-gradient-to-br ${p.color} shadow-soft hover-lift`}>
                     <img src={p.photo} alt={p.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
                     <div className="absolute -bottom-1 -right-1 z-10"><WarmthRing value={p.warmth} size={28} stroke={3} /></div>
+                    {p.verified && (
+                      <span className="absolute top-1 left-1 z-10 h-5 w-5 rounded-full bg-background/80 backdrop-blur grid place-items-center">
+                        <VerifiedBadge verified size="xs" />
+                      </span>
+                    )}
                   </div>
-                  <p className="mt-2 text-xs truncate">{p.name}</p>
+                  <p className="mt-2 text-xs truncate flex items-center justify-center gap-0.5">
+                    {p.name}
+                  </p>
                 </Link>
               </div>
             ))}
@@ -48,7 +65,10 @@ export default function Matches() {
                   </Link>
                   <Link to={`/chat/${p.id}`} className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
-                      <p className="font-medium truncate">{p.name}</p>
+                      <p className="font-medium truncate flex items-center gap-1">
+                        {p.name}
+                        <VerifiedBadge verified={p.verified} size="xs" />
+                      </p>
                       <span className="text-[11px] text-muted-foreground shrink-0">{times[i]}</span>
                     </div>
                     <div className="flex items-center justify-between gap-2 mt-0.5">
