@@ -9,6 +9,7 @@ import { WarmthRing } from "@/components/WarmthRing";
 import { Heart, RotateCcw, Star, UserPlus, X, Zap, EyeOff, Globe2, MessageCircleQuestion } from "lucide-react";
 import { useDiscoverTuning } from "@/lib/tuning";
 import { TuningPanel } from "@/components/TuningPanel";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
 
 type Mode = "normal" | "blind" | "passport" | "quiz";
 
