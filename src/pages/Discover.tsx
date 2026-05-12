@@ -272,6 +272,7 @@ export default function Discover() {
                 <div className="flex items-end gap-2">
                   <h2 className="text-3xl font-black">{mode === "blind" ? "神秘人" : top.name}</h2>
                   <span className="text-xl mb-0.5">{top.age}</span>
+                  {mode !== "blind" && <span className="mb-1.5"><VerifiedBadge verified={top.verified} size="sm" /></span>}
                   <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-white/20 backdrop-blur">{top.mbti}</span>
                 </div>
                 <p className="text-sm text-white/90">{mode === "blind" ? "傳 5 則訊息後解鎖真實樣貌" : top.bio}</p>
