@@ -7,7 +7,7 @@ import { ArrowRight, Camera, Plus } from "lucide-react";
 
 export default function Onboarding() {
   const nav = useNavigate();
-  const { nickname, setNickname, tags, setTags, photos, setPhotos, setStage } = useApp();
+  const { nickname, setNickname, tags, setTags, photos, setPhotos, setStage, verified } = useApp();
   const [step, setStep] = useState(0); // 0=welcome,1,2,3
   const [error, setError] = useState("");
 
@@ -15,7 +15,12 @@ export default function Onboarding() {
     if (step === 1 && nickname.trim().length < 1) { setError("請輸入暱稱"); return; }
     if (step === 2 && (tags.length < 3 || tags.length > 8)) { setError("請選 3 ~ 8 個標籤"); return; }
     setError("");
-    if (step === 3) { setStage("app"); nav("/discover"); return; }
+    if (step === 3) {
+      // 進入真人驗證流程；驗證頁完成後才會 setStage("app")
+      setStage("verify");
+      nav(verified ? "/discover" : "/verify");
+      return;
+    }
     setStep(step + 1);
   };
 
@@ -32,7 +37,7 @@ export default function Onboarding() {
           <div className="mb-6 animate-slide-down">
             <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
               <span>步驟 {step} / 3</span>
-              <button onClick={() => { setStage("app"); nav("/discover"); }} className="story-link">略過</button>
+              <button onClick={() => { setStage("verify"); nav(verified ? "/discover" : "/verify"); }} className="story-link">略過</button>
             </div>
             <div className="h-1.5 rounded-full bg-muted overflow-hidden">
               <div className="h-full bg-gradient-primary transition-all duration-500" style={{ width: `${progress}%` }} />
