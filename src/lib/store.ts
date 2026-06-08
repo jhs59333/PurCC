@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 
-type Stage = "wallet" | "onboarding" | "verify" | "app";
+type Stage = "wallet" | "onboarding" | "app";
 
 type State = {
   stage: Stage;
