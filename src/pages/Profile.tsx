@@ -6,7 +6,8 @@ import { AppHeader } from "@/components/AppHeader";
 import { ME, ALL_TAGS } from "@/lib/mock";
 import { useApp } from "@/lib/store";
 import { WarmthRing } from "@/components/WarmthRing";
-import { Camera, Crown, Edit3, LogOut, Plus, Settings, Wallet, X } from "lucide-react";
+import { Camera, Crown, Edit3, LogOut, Plus, Settings, Sparkles, Wallet, X } from "lucide-react";
+import { AIIntroSheet } from "@/components/AIIntroSheet";
 
 export default function Profile() {
   const nav = useNavigate();
@@ -15,6 +16,7 @@ export default function Profile() {
   const [editing, setEditing] = useState(false);
   const [bio, setBio] = useState(ME.bio);
   const [showAdd, setShowAdd] = useState(false);
+  const [showAI, setShowAI] = useState(false);
 
   const removeTag = (t: string) => setTags(tags.filter((x) => x !== t));
   const addTag = (t: string) => { if (!tags.includes(t)) setTags([...tags, t]); };
@@ -23,7 +25,7 @@ export default function Profile() {
 
   return (
     <PhoneShell>
-      <div className="h-full flex flex-col">
+      <div className="relative h-full flex flex-col">
         <AppHeader title="我的" />
         <div className="flex-1 overflow-y-auto px-5 pb-[88px] space-y-4">
 
@@ -56,7 +58,12 @@ export default function Profile() {
           {/* 自介 + 標籤 */}
           <div className="rounded-2xl glass border border-border p-4 space-y-3">
             <div>
-              <p className="text-xs text-muted-foreground mb-1">自我介紹</p>
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-xs text-muted-foreground">自我介紹</p>
+                <button onClick={() => setShowAI(true)} className="press text-[11px] px-2.5 py-1 rounded-full bg-primary/20 text-primary-glow border border-primary/30 flex items-center gap-1">
+                  <Sparkles className="h-3 w-3" /> AI 幫我寫
+                </button>
+              </div>
               {editing ? (
                 <textarea value={bio} onChange={(e) => setBio(e.target.value)} className="w-full bg-input rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-primary/40" rows={3} />
               ) : (
@@ -131,6 +138,7 @@ export default function Profile() {
           </div>
         </div>
         <TabBar />
+        <AIIntroSheet open={showAI} onClose={() => setShowAI(false)} nickname={nickname || ME.name} tags={tags} onApply={setBio} />
       </div>
     </PhoneShell>
   );
