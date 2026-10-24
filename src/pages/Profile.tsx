@@ -25,7 +25,7 @@ export default function Profile() {
 
   return (
     <PhoneShell>
-      <div className="h-full flex flex-col">
+      <div className="relative h-full flex flex-col">
         <AppHeader title="我的" />
         <div className="flex-1 overflow-y-auto px-5 pb-[88px] space-y-4">
 
