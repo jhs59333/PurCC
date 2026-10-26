@@ -1,3 +1,4 @@
+import { useTx } from "@/lib/i18n";
 import { useT } from "@/lib/i18n";
 import { useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -15,6 +16,7 @@ import { TuningPanel } from "@/components/TuningPanel";
 type Mode = "normal" | "blind" | "passport" | "quiz";
 
 export default function Discover() {
+  const tx = useTx();
   const t = useT();
   const nav = useNavigate();
   const myTags = useApp((s) => s.tags);
@@ -110,10 +112,10 @@ export default function Discover() {
         {/* 模式切換 */}
         <div className="px-5 pb-2 flex gap-2 overflow-x-auto no-scrollbar">
           {[
-            { k: "normal", label: "一般", icon: Heart },
+            { k: "normal", label: tx("一般"), icon: Heart },
             { k: "blind", label: "Blind Date", icon: EyeOff },
             { k: "passport", label: "Passport", icon: Globe2 },
-            { k: "quiz", label: "今日話題", icon: MessageCircleQuestion },
+            { k: "quiz", label: tx("今日話題"), icon: MessageCircleQuestion },
           ].map(({ k, label, icon: Icon }) => (
             <button
               key={k}
@@ -131,7 +133,7 @@ export default function Discover() {
           <div className="px-5 pb-2 flex gap-2 overflow-x-auto no-scrollbar animate-slide-down">
             {CITIES.map((c) => (
               <button key={c} onClick={() => setCity(c)} className={`shrink-0 px-3 py-1 rounded-full text-xs border ${city === c ? "bg-primary/20 border-primary text-primary-glow" : "border-border text-muted-foreground"}`}>
-                {c}
+                {tx(c)}
               </button>
             ))}
           </div>
@@ -143,12 +145,12 @@ export default function Discover() {
             <div className="h-full grid place-items-center text-center animate-pop-in">
               <div>
                 <div className="text-5xl mb-3">🌙</div>
-                <p className="text-muted-foreground">今天先到這裡<br />明天再為你帶來新朋友</p>
+                <p className="text-muted-foreground">{tx("今天先到這裡")}<br />{tx("明天再為你帶來新朋友")}</p>
                 <button
                   onClick={reload}
                   className="ripple press mt-5 inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-gradient-primary text-primary-foreground text-xs font-bold shadow-glow"
                 >
-                  <RotateCcw className="h-3.5 w-3.5" /> 重新整理推薦
+                  <RotateCcw className="h-3.5 w-3.5" /> {tx("重新整理推薦")}
                 </button>
               </div>
             </div>
@@ -225,7 +227,7 @@ export default function Discover() {
                 >
                   <img
                     src={top.photo}
-                    alt={`${top.name} 的照片`}
+                    alt={`${tx(top.name)}${tx("的照片")}`}
                     width={768}
                     height={1024}
                     loading="lazy"
@@ -272,24 +274,24 @@ export default function Discover() {
               {/* 內容 */}
               <div className="absolute inset-x-0 bottom-0 p-5 text-white space-y-3">
                 <div className="flex items-end gap-2">
-                  <h2 className="text-3xl font-black">{mode === "blind" ? "神秘人" : top.name}</h2>
+                  <h2 className="text-3xl font-black">{mode === "blind" ? tx("神秘人") : tx(top.name)}</h2>
                   <span className="text-xl mb-0.5">{top.age}</span>
                   {mode !== "blind" && null}
                   <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-white/20 backdrop-blur">{top.mbti}</span>
                 </div>
-                <p className="text-sm text-white/90">{mode === "blind" ? "傳 5 則訊息後解鎖真實樣貌" : top.bio}</p>
+                <p className="text-sm text-white/90">{mode === "blind" ? tx("傳 5 則訊息後解鎖真實樣貌") : tx(top.bio)}</p>
                 {mode !== "blind" && (
                   <div className="rounded-xl bg-white/15 backdrop-blur p-3">
-                    <p className="text-[11px] text-white/70">{top.prompt.q}</p>
-                    <p className="text-sm font-medium mt-0.5">「{top.prompt.a}」</p>
+                    <p className="text-[11px] text-white/70">{tx(top.prompt.q)}</p>
+                    <p className="text-sm font-medium mt-0.5">「{tx(top.prompt.a)}」</p>
                   </div>
                 )}
                 <div className="flex flex-wrap gap-1.5">
                   {top.tags.slice(0, 4).map((t) => (
-                    <span key={t} className={`text-[11px] px-2 py-0.5 rounded-full ${commonTags.includes(t) ? "bg-primary/80 text-white" : "bg-white/20"}`}>{t}</span>
+                    <span key={t} className={`text-[11px] px-2 py-0.5 rounded-full ${commonTags.includes(t) ? "bg-primary/80 text-white" : "bg-white/20"}`}>{tx(t)}</span>
                   ))}
                   {commonTags.length > 0 && (
-                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-primary text-white font-bold">共同 {commonTags.length}</span>
+                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-primary text-white font-bold">{tx("共同")} {commonTags.length}</span>
                   )}
                 </div>
               </div>
@@ -327,6 +329,7 @@ export default function Discover() {
 }
 
 function QuizCard({ step, onAnswer, done }: { step: number; onAnswer: () => void; done: boolean }) {
+  const tx = useTx();
   const questions = [
     { q: "你週末最想做的事？", opts: ["睡到自然醒", "出門探險", "在家看劇", "找朋友吃飯"] },
     { q: "理想的約會場景？", opts: ["咖啡廳聊天", "看一場電影", "市集散步", "開車兜風"] },
@@ -335,21 +338,21 @@ function QuizCard({ step, onAnswer, done }: { step: number; onAnswer: () => void
   if (done) return (
     <div className="absolute inset-0 rounded-3xl glass-strong p-8 flex flex-col items-center justify-center text-center animate-pop-in">
       <div className="text-6xl mb-4 animate-heart-beat">✨</div>
-      <h3 className="text-xl font-bold text-gradient">為你找到 5 位有共鳴的朋友</h3>
-      <p className="text-sm text-muted-foreground mt-2">已加入今日推薦</p>
+      <h3 className="text-xl font-bold text-gradient">{tx("為你找到5位有共鳴的朋友")}</h3>
+      <p className="text-sm text-muted-foreground mt-2">{tx("已加入今日推薦")}</p>
     </div>
   );
   const cur = questions[step];
   return (
     <div className="absolute inset-0 rounded-3xl glass-strong p-6 flex flex-col animate-card-entry">
-      <p className="text-xs text-muted-foreground">今日話題 {step + 1} / 3</p>
-      <h3 className="mt-2 text-2xl font-bold leading-snug">{cur.q}</h3>
+      <p className="text-xs text-muted-foreground">{tx("今日話題")} {step + 1} / 3</p>
+      <h3 className="mt-2 text-2xl font-bold leading-snug">{tx(cur.q)}</h3>
       <div className="mt-6 space-y-3 flex-1">
         {cur.opts.map((o, i) => (
           <button key={o} onClick={onAnswer}
             style={{ animationDelay: `${i * 60}ms` }}
             className="ripple press w-full text-left rounded-2xl border border-border p-4 hover:border-primary hover:bg-primary/10 transition animate-slide-right">
-            {o}
+            {tx(o)}
           </button>
         ))}
       </div>
@@ -358,6 +361,7 @@ function QuizCard({ step, onAnswer, done }: { step: number; onAnswer: () => void
 }
 
 function MatchModal({ person, onClose, onChat }: { person: Person; onClose: () => void; onChat: () => void }) {
+  const tx = useTx();
   return (
     <div className="absolute inset-0 z-40 grid place-items-center bg-black/60 backdrop-blur-sm animate-pop-in" onClick={onClose}>
       {/* 彩屑 */}
@@ -375,17 +379,17 @@ function MatchModal({ person, onClose, onChat }: { person: Person; onClose: () =
       ))}
       <div className="relative w-[85%] glass-strong rounded-3xl p-7 text-center shadow-card" onClick={(e) => e.stopPropagation()}>
         <div className="text-6xl animate-heart-beat">💜</div>
-        <h2 className="mt-3 text-2xl font-black text-gradient">配對成功！</h2>
-        <p className="text-sm text-muted-foreground mt-1">你和 {person.name} 互相喜歡了</p>
+        <h2 className="mt-3 text-2xl font-black text-gradient">{tx("配對成功！")}</h2>
+        <p className="text-sm text-muted-foreground mt-1">{tx("你和")} {tx(person.name)} {tx("互相喜歡了")}</p>
         <div className="mt-4 flex justify-center gap-3 text-4xl">
           <span>{person.avatar}</span><span className="self-center text-primary">💞</span><span>🫶</span>
         </div>
         <div className="mt-3 flex flex-wrap justify-center gap-1.5">
-          {person.tags.slice(0, 3).map((t) => <span key={t} className="text-[11px] px-2 py-0.5 rounded-full bg-primary/20 text-primary-glow">{t}</span>)}
+          {person.tags.slice(0, 3).map((t) => <span key={t} className="text-[11px] px-2 py-0.5 rounded-full bg-primary/20 text-primary-glow">{tx(t)}</span>)}
         </div>
         <div className="mt-6 space-y-2">
-          <button onClick={onChat} className="ripple press w-full py-3 rounded-2xl bg-gradient-primary text-primary-foreground font-bold shadow-glow">直接開聊</button>
-          <button onClick={onClose} className="ripple press w-full py-3 rounded-2xl border border-border text-muted-foreground">稍後再說</button>
+          <button onClick={onChat} className="ripple press w-full py-3 rounded-2xl bg-gradient-primary text-primary-foreground font-bold shadow-glow">{tx("直接開聊")}</button>
+          <button onClick={onClose} className="ripple press w-full py-3 rounded-2xl border border-border text-muted-foreground">{tx("稍後再說")}</button>
         </div>
       </div>
     </div>

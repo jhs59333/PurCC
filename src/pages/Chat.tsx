@@ -1,3 +1,4 @@
+import { useTx } from "@/lib/i18n";
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { PhoneShell } from "@/components/PhoneShell";
@@ -8,6 +9,7 @@ import { ArrowLeft, Mic, MoreVertical, Send, Smile, Sparkles, X } from "lucide-r
 type Msg = { id: string; text: string; mine: boolean; loved?: boolean };
 
 export default function Chat() {
+  const tx = useTx();
   const { id } = useParams();
   const person = PEOPLE.find((p) => p.id === id) ?? PEOPLE[0];
 
@@ -54,7 +56,7 @@ export default function Chat() {
   };
 
   const stopRec = () => {
-    if (recSec > 0) send(`🎤 語音 ${recSec}s`);
+    if (recSec > 0) send(`🎤 ${tx("語音")} ${recSec}s`);
     setRecording(false); setRecSec(0);
   };
 
@@ -68,11 +70,11 @@ export default function Chat() {
             <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-success border-2 border-background animate-pulse-dot" />
           </Link>
           <div className="flex-1 min-w-0">
-            <p className="font-medium text-sm truncate">{person.name}</p>
-            <p className="text-[11px] text-muted-foreground">線上 · 24h 倒數中</p>
+            <p className="font-medium text-sm truncate">{tx(person.name)}</p>
+            <p className="text-[11px] text-muted-foreground">{tx("線上 · 24h 倒數中")}</p>
           </div>
           <WarmthRing value={person.warmth} size={36} stroke={3} />
-          <button className="press p-2 rounded-full hover:bg-primary/10" aria-label="更多">
+          <button className="press p-2 rounded-full hover:bg-primary/10" aria-label={tx("更多")}>
             <MoreVertical className="h-5 w-5" />
           </button>
         </header>
@@ -84,7 +86,7 @@ export default function Chat() {
           <div className="px-3 pt-2 animate-slide-down">
             <div className="rounded-2xl glass border border-primary/30 p-3">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-[11px] flex items-center gap-1 text-primary-glow"><Sparkles className="h-3 w-3" /> DELULU AI 建議</p>
+                <p className="text-[11px] flex items-center gap-1 text-primary-glow"><Sparkles className="h-3 w-3" /> {tx("DELULU AI 建議")}</p>
                 <button onClick={() => setShowAi(false)} className="press p-0.5 rounded-full"><X className="h-3 w-3 text-muted-foreground" /></button>
               </div>
               <div className="flex flex-wrap gap-1.5">
@@ -107,7 +109,7 @@ export default function Chat() {
                     ? "bg-gradient-primary text-primary-foreground rounded-br-md animate-bubble-in-me"
                     : "glass border border-border rounded-bl-md animate-bubble-in"
                 }`}>
-                {m.text}
+                {tx(m.text)}
                 {m.loved && <span className="absolute -top-2 -right-1 text-sm">💜</span>}
               </div>
             </div>
@@ -148,14 +150,14 @@ export default function Chat() {
                   onPointerDown={() => setRecording(true)}
                   className="flex-1 h-11 rounded-full bg-primary/15 border border-primary/30 text-sm text-primary-glow press"
                 >
-                  按住說話 🎤
+                  {tx("按住說話 🎤")}
                 </button>
               ) : (
                 <input
                   value={text}
                   onChange={(e) => setText(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && send(text)}
-                  placeholder="說點什麼…"
+                  placeholder={tx("說點什麼…")}
                   className="flex-1 h-11 px-4 rounded-full bg-input border border-border text-sm outline-none focus:border-primary"
                 />
               )}

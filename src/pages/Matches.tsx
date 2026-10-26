@@ -1,3 +1,4 @@
+import { useTx } from "@/lib/i18n";
 import { useT } from "@/lib/i18n";
 import { Link, useNavigate } from "react-router-dom";
 import { PhoneShell } from "@/components/PhoneShell";
@@ -8,6 +9,7 @@ import { WarmthRing } from "@/components/WarmthRing";
 import { Clock } from "lucide-react";
 
 export default function Matches() {
+  const tx = useTx();
   const t = useT();
   const nav = useNavigate();
   const newMatches = PEOPLE.slice(0, 6);
@@ -22,7 +24,7 @@ export default function Matches() {
         <AppHeader title={t("朋友", "Friends")} />
 
         <section className="px-5 pt-2 animate-slide-up">
-          <h2 className="text-sm font-medium text-muted-foreground mb-3">最新配對</h2>
+          <h2 className="text-sm font-medium text-muted-foreground mb-3">{tx("最新配對")}</h2>
           <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2 -mx-5 px-5">
             {newMatches.map((p, i) => (
               <div key={p.id} style={{ animationDelay: `${i * 60}ms` }} className="shrink-0 w-20 text-center animate-tag-bounce">
@@ -31,7 +33,7 @@ export default function Matches() {
                     <img src={p.photo} alt={p.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
                     <div className="absolute -bottom-1 -right-1 z-10"><WarmthRing value={p.warmth} size={28} stroke={3} /></div>
                   </div>
-                  <p className="mt-2 text-xs truncate">{p.name}</p>
+                  <p className="mt-2 text-xs truncate">{tx(p.name)}</p>
                 </Link>
               </div>
             ))}
@@ -39,7 +41,7 @@ export default function Matches() {
         </section>
 
         <section className="flex-1 overflow-y-auto px-5 mt-4 pb-[88px]">
-          <h2 className="text-sm font-medium text-muted-foreground mb-2">訊息</h2>
+          <h2 className="text-sm font-medium text-muted-foreground mb-2">{tx("訊息")}</h2>
           <ul className="space-y-1">
             {chats.map((p, i) => (
               <li key={p.id} style={{ animationDelay: `${i * 50}ms` }} className="animate-slide-up">
@@ -50,11 +52,11 @@ export default function Matches() {
                   </Link>
                   <Link to={`/chat/${p.id}`} className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
-                      <p className="font-medium truncate">{p.name}</p>
-                      <span className="text-[11px] text-muted-foreground shrink-0">{times[i]}</span>
+                      <p className="font-medium truncate">{tx(p.name)}</p>
+                      <span className="text-[11px] text-muted-foreground shrink-0">{tx(times[i])}</span>
                     </div>
                     <div className="flex items-center justify-between gap-2 mt-0.5">
-                      <p className="text-xs text-muted-foreground truncate">{previews[i]}</p>
+                      <p className="text-xs text-muted-foreground truncate">{tx(previews[i])}</p>
                       {i < 3 && <span className="shrink-0 text-[10px] text-warning flex items-center gap-0.5"><Clock className="h-3 w-3" /> {23 - i}h</span>}
                     </div>
                   </Link>
