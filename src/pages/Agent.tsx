@@ -1,3 +1,4 @@
+import { useT } from "@/lib/i18n";
 import { useEffect, useState } from "react";
 import { PhoneShell } from "@/components/PhoneShell";
 import { TabBar } from "@/components/TabBar";
@@ -6,6 +7,7 @@ import { PEOPLE } from "@/lib/mock";
 import { ChevronDown, Play, Sparkles } from "lucide-react";
 
 export default function Agent() {
+  const t = useT();
   const [on, setOn] = useState(true);
   const [logs, setLogs] = useState<string[]>([]);
   const [running, setRunning] = useState(false);
@@ -33,7 +35,7 @@ export default function Agent() {
   return (
     <PhoneShell>
       <div className="h-full flex flex-col">
-        <AppHeader title="AI 助手" />
+        <AppHeader title={t("AI 助手", "AI Assistant")} />
         <div className="flex-1 overflow-y-auto px-5 pb-[88px] space-y-5">
 
           {/* Agent 開關 */}

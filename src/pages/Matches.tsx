@@ -1,3 +1,4 @@
+import { useT } from "@/lib/i18n";
 import { Link, useNavigate } from "react-router-dom";
 import { PhoneShell } from "@/components/PhoneShell";
 import { TabBar } from "@/components/TabBar";
@@ -7,6 +8,7 @@ import { WarmthRing } from "@/components/WarmthRing";
 import { Clock } from "lucide-react";
 
 export default function Matches() {
+  const t = useT();
   const nav = useNavigate();
   const newMatches = PEOPLE.slice(0, 6);
   const chats = PEOPLE.slice(0, 8);
@@ -17,7 +19,7 @@ export default function Matches() {
   return (
     <PhoneShell>
       <div className="h-full flex flex-col">
-        <AppHeader title="朋友" />
+        <AppHeader title={t("朋友", "Friends")} />
 
         <section className="px-5 pt-2 animate-slide-up">
           <h2 className="text-sm font-medium text-muted-foreground mb-3">最新配對</h2>

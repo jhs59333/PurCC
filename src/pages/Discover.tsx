@@ -1,3 +1,4 @@
+import { useT } from "@/lib/i18n";
 import { useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { PhoneShell } from "@/components/PhoneShell";
@@ -14,6 +15,7 @@ import { TuningPanel } from "@/components/TuningPanel";
 type Mode = "normal" | "blind" | "passport" | "quiz";
 
 export default function Discover() {
+  const t = useT();
   const nav = useNavigate();
   const myTags = useApp((s) => s.tags);
   const [stack, setStack] = useState<Person[]>(PEOPLE);
@@ -103,7 +105,7 @@ export default function Discover() {
   return (
     <PhoneShell>
       <div className="h-full flex flex-col">
-        <AppHeader title="探索" />
+        <AppHeader title={t("探索", "Discover")} />
 
         {/* 模式切換 */}
         <div className="px-5 pb-2 flex gap-2 overflow-x-auto no-scrollbar">
