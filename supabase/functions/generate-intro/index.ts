@@ -13,7 +13,7 @@ Deno.serve(async (req) => {
   try {
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) return json({ error: "AI 服務尚未設定" }, 500);
-    const { nickname, tags, tone, activities, lookingFor, about } = await req.json();
+    const { nickname, tags, tone, lang, activities, lookingFor, about } = await req.json();
     if (!Array.isArray(tags) || tags.length === 0) return json({ error: "請至少選一個興趣" }, 400);
 
     const provider = createOpenAI({
@@ -22,7 +22,11 @@ Deno.serve(async (req) => {
       headers: { "Lovable-API-Key": apiKey, "X-Lovable-AIG-SDK": "vercel-ai-sdk" },
     });
 
-    const system = `你是 PurCC 溫馨社交 App 的自我介紹寫手。用繁體中文，語氣真誠溫暖、不油膩、不誇大，避免陳腔濫調。
+    const en = lang === "en";
+    const system = en
+      ? `You write profile intros for PurCC, a warm social app. Write in natural English: sincere, warm, not cheesy or exaggerated, no clichés.
+Output JSON only (no markdown): {"oneLiner":"catchy line under 12 words","bio":"60-100 word intro, may include 1-2 emoji","topics":["3 conversation starters, each under 12 words"]}`
+      : `你是 PurCC 溫馨社交 App 的自我介紹寫手。用繁體中文，語氣真誠溫暖、不油膩、不誇大，避免陳腔濫調。
 只輸出 JSON（不要 markdown），格式：{"oneLiner":"一句 20 字內吸睛金句","bio":"80-140 字自我介紹，可含 1-2 個 emoji","topics":["3 個能聊的開場話題，每個 20 字內"]}`;
     const prompt = `暱稱：${String(nickname || "").slice(0, 30)}
 興趣標籤：${tags.slice(0, 12).join("、")}
