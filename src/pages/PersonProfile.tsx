@@ -1,3 +1,4 @@
+import { useTx } from "@/lib/i18n";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { PhoneShell } from "@/components/PhoneShell";
 import { PEOPLE } from "@/lib/mock";
@@ -5,6 +6,7 @@ import { WarmthRing } from "@/components/WarmthRing";
 import { ArrowLeft, MapPin, MessageCircle, Sparkles } from "lucide-react";
 
 export default function PersonProfile() {
+  const tx = useTx();
   const { id } = useParams();
   const nav = useNavigate();
   const person = PEOPLE.find((p) => p.id === id) ?? PEOPLE[0];
@@ -23,10 +25,10 @@ export default function PersonProfile() {
           </div>
           <div className="absolute bottom-4 left-5 right-5">
             <p className="text-3xl font-bold flex items-center gap-2">
-              {person.name} <span className="text-xl text-muted-foreground">· {person.age}</span>
+              {tx(person.name)} <span className="text-xl text-muted-foreground">· {person.age}</span>
             </p>
             <p className="text-xs text-muted-foreground mt-1 flex items-center gap-3">
-              <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{person.city}</span>
+              <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{tx(person.city)}</span>
               <span>{person.mbti}</span>
             </p>
           </div>
@@ -34,30 +36,30 @@ export default function PersonProfile() {
 
         <div className="flex-1 overflow-y-auto px-5 pt-4 pb-6 space-y-4">
           <div className="rounded-2xl glass border border-border p-4">
-            <p className="text-xs text-muted-foreground mb-1">關於我</p>
-            <p className="text-sm">{person.bio}</p>
+            <p className="text-xs text-muted-foreground mb-1">{tx("關於我")}</p>
+            <p className="text-sm">{tx(person.bio)}</p>
           </div>
 
           <div className="rounded-2xl glass border border-primary/30 p-4">
             <p className="text-xs flex items-center gap-1 text-primary-glow mb-2">
-              <Sparkles className="h-3 w-3" /> {person.prompt.q}
+              <Sparkles className="h-3 w-3" /> {tx(person.prompt.q)}
             </p>
-            <p className="text-sm">{person.prompt.a}</p>
+            <p className="text-sm">{tx(person.prompt.a)}</p>
           </div>
 
           <div>
-            <p className="text-xs text-muted-foreground mb-2">喜好</p>
+            <p className="text-xs text-muted-foreground mb-2">{tx("喜好")}</p>
             <div className="flex flex-wrap gap-1.5">
               {person.tags.map((t) => (
                 <span key={t} className="text-xs px-3 py-1 rounded-full bg-primary/15 text-primary-glow border border-primary/30">
-                  {t}
+                  {tx(t)}
                 </span>
               ))}
             </div>
           </div>
 
           <Link to={`/chat/${person.id}`} className="press flex items-center justify-center gap-2 h-12 rounded-full bg-gradient-primary text-primary-foreground font-medium shadow-glow">
-            <MessageCircle className="h-4 w-4" /> 傳送訊息
+            <MessageCircle className="h-4 w-4" /> {tx("傳送訊息")}
           </Link>
         </div>
       </div>

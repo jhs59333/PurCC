@@ -91,8 +91,8 @@ export default function Chat() {
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {aiSugs.map((s) => (
-                  <button key={s} onClick={() => setText(s)} className="ripple press text-xs px-3 py-1 rounded-full bg-primary/15 border border-primary/30 hover:bg-primary/30">
-                    {s}
+                  <button key={s} onClick={() => setText(tx(s))} className="ripple press text-xs px-3 py-1 rounded-full bg-primary/15 border border-primary/30 hover:bg-primary/30">
+                    {tx(s)}
                   </button>
                 ))}
               </div>
