@@ -8,11 +8,12 @@ import { useApp } from "@/lib/store";
 import { WarmthRing } from "@/components/WarmthRing";
 import { Camera, Crown, Edit3, LogOut, Plus, Settings, Sparkles, Wallet, X } from "lucide-react";
 import { AIIntroSheet } from "@/components/AIIntroSheet";
-import { useT } from "@/lib/i18n";
+import { useT, useTx } from "@/lib/i18n";
 
 export default function Profile() {
   const nav = useNavigate();
   const t = useT();
+  const tx = useTx();
   const { wallet, nickname, tags: myTags, setTags, setStage } = useApp();
   const tags = myTags.length ? myTags : ME.tags;
   const [editing, setEditing] = useState(false);
@@ -42,7 +43,7 @@ export default function Profile() {
                 {editing && <button className="absolute bottom-0 right-0 h-7 w-7 rounded-full bg-primary grid place-items-center"><Camera className="h-3.5 w-3.5 text-white" /></button>}
               </div>
               <div className="flex-1">
-                <p className="text-xl font-bold">{nickname || ME.name} <span className="text-base text-muted-foreground">· {ME.age}</span></p>
+                <p className="text-xl font-bold">{nickname || tx(ME.name)} <span className="text-base text-muted-foreground">· {ME.age}</span></p>
                 <p className="text-xs text-muted-foreground mt-0.5">{ME.mbti} · {t("信任", "Trust")} {ME.trust}</p>
               </div>
               <WarmthRing value={ME.warmth} size={56} stroke={5} />
@@ -69,7 +70,7 @@ export default function Profile() {
               {editing ? (
                 <textarea value={bio} onChange={(e) => setBio(e.target.value)} className="w-full bg-input rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-primary/40" rows={3} />
               ) : (
-                <p className="text-sm">{bio}</p>
+                <p className="text-sm">{tx(bio)}</p>
               )}
             </div>
             <div>
@@ -77,7 +78,7 @@ export default function Profile() {
               <div className="flex flex-wrap gap-1.5">
                 {tags.map((t) => (
                   <span key={t} className="text-xs px-3 py-1 rounded-full bg-primary/15 text-primary-glow border border-primary/30 flex items-center gap-1">
-                    {t}
+                    {tx(t)}
                     {editing && <button onClick={() => removeTag(t)}><X className="h-3 w-3" /></button>}
                   </span>
                 ))}

@@ -1,3 +1,4 @@
+import { useTx } from "@/lib/i18n";
 import { useT } from "@/lib/i18n";
 import { useState } from "react";
 import { PhoneShell } from "@/components/PhoneShell";
@@ -7,6 +8,7 @@ import { POSTS } from "@/lib/mock";
 import { Heart, MessageCircle, Plus, Send } from "lucide-react";
 
 export default function Community() {
+  const tx = useTx();
   const t = useT();
   const [posts, setPosts] = useState(POSTS);
   const [composing, setComposing] = useState(false);
@@ -30,18 +32,18 @@ export default function Community() {
         <div className="px-5 pb-2">
           {composing ? (
             <div className="rounded-2xl glass-strong p-3 animate-slide-down border border-primary/40">
-              <textarea autoFocus value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="今天有什麼想分享？"
+              <textarea autoFocus value={draft} onChange={(e) => setDraft(e.target.value)} placeholder={tx("今天有什麼想分享？")}
                 className="w-full bg-transparent outline-none resize-none text-sm min-h-[80px]" />
               <div className="flex justify-end gap-2">
-                <button onClick={() => setComposing(false)} className="press text-xs px-3 py-1.5 rounded-full text-muted-foreground">取消</button>
+                <button onClick={() => setComposing(false)} className="press text-xs px-3 py-1.5 rounded-full text-muted-foreground">{tx("取消")}</button>
                 <button onClick={publish} className="ripple press text-xs px-4 py-1.5 rounded-full bg-gradient-primary text-primary-foreground font-medium flex items-center gap-1">
-                  <Send className="h-3 w-3" /> 發布
+                  <Send className="h-3 w-3" /> {tx("發布")}
                 </button>
               </div>
             </div>
           ) : (
             <button onClick={() => setComposing(true)} className="ripple press w-full rounded-full glass border border-primary/30 px-4 py-3 text-sm text-muted-foreground text-left flex items-center gap-2 hover-lift">
-              <Plus className="h-4 w-4 text-primary" /> 分享你的此刻…
+              <Plus className="h-4 w-4 text-primary" /> {tx("分享你的此刻…")}
             </button>
           )}
         </div>
@@ -53,11 +55,11 @@ export default function Community() {
               <header className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-full bg-gradient-warm grid place-items-center text-lg">{p.avatar}</div>
                 <div>
-                  <p className="text-sm font-medium">{p.author}</p>
-                  <p className="text-[11px] text-muted-foreground">{p.time}</p>
+                  <p className="text-sm font-medium">{tx(p.author)}</p>
+                  <p className="text-[11px] text-muted-foreground">{tx(p.time)}</p>
                 </div>
               </header>
-              <p className="mt-3 text-sm leading-relaxed">{p.text}</p>
+              <p className="mt-3 text-sm leading-relaxed">{tx(p.text)}</p>
               {i % 2 === 0 && (
                 <div className="mt-3 aspect-[4/3] rounded-2xl bg-gradient-to-br from-primary/30 via-accent/30 to-pink-300/20 grid place-items-center text-4xl">
                   {["🌅", "☕️", "🎨", "🌙"][i % 4]}
