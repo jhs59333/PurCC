@@ -66,6 +66,7 @@ export const EN: Record<string, string> = {
   // matches / feed / notifications / profile
   最新配對: "New matches", 訊息: "Messages", "今天有什麼想分享？": "What would you like to share today?",
   取消: "Cancel", 發布: "Post", "分享你的此刻…": "Share your moment…", 通知: "Notifications", 全部已讀: "Mark all read",
+  "白天設計師，晚上躺平愛好者。": "Designer by day, professional couch potato by night.",
   關於我: "About me", 喜好: "Interests", 傳送訊息: "Send message",
 };
 
