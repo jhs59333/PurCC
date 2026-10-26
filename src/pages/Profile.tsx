@@ -8,9 +8,11 @@ import { useApp } from "@/lib/store";
 import { WarmthRing } from "@/components/WarmthRing";
 import { Camera, Crown, Edit3, LogOut, Plus, Settings, Sparkles, Wallet, X } from "lucide-react";
 import { AIIntroSheet } from "@/components/AIIntroSheet";
+import { useT } from "@/lib/i18n";
 
 export default function Profile() {
   const nav = useNavigate();
+  const t = useT();
   const { wallet, nickname, tags: myTags, setTags, setStage } = useApp();
   const tags = myTags.length ? myTags : ME.tags;
   const [editing, setEditing] = useState(false);
@@ -26,13 +28,13 @@ export default function Profile() {
   return (
     <PhoneShell>
       <div className="relative h-full flex flex-col">
-        <AppHeader title="我的" />
+        <AppHeader title={t("我的", "Me")} />
         <div className="flex-1 overflow-y-auto px-5 pb-[88px] space-y-4">
 
           {/* 個人資訊 */}
           <div className="relative rounded-3xl bg-gradient-to-br from-primary/30 via-accent/20 to-rose/20 p-5 animate-slide-up">
             <button onClick={() => setEditing(!editing)} className="absolute top-3 right-3 press text-xs px-3 py-1 rounded-full bg-white/15 backdrop-blur flex items-center gap-1">
-              {editing ? <><X className="h-3 w-3" /> 完成</> : <><Edit3 className="h-3 w-3" /> 編輯</>}
+              {editing ? <><X className="h-3 w-3" /> {t("完成", "Done")}</> : <><Edit3 className="h-3 w-3" /> {t("編輯", "Edit")}</>}
             </button>
             <div className="flex items-center gap-4">
               <div className="relative h-20 w-20 rounded-full bg-gradient-warm grid place-items-center text-4xl">
@@ -41,12 +43,12 @@ export default function Profile() {
               </div>
               <div className="flex-1">
                 <p className="text-xl font-bold">{nickname || ME.name} <span className="text-base text-muted-foreground">· {ME.age}</span></p>
-                <p className="text-xs text-muted-foreground mt-0.5">{ME.mbti} · 信任 {ME.trust}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{ME.mbti} · {t("信任", "Trust")} {ME.trust}</p>
               </div>
               <WarmthRing value={ME.warmth} size={56} stroke={5} />
             </div>
             <div className="mt-4 grid grid-cols-3 gap-2 text-center text-[11px]">
-              {[["配對", ME.matches], ["回覆率", `${ME.replyRate}%`], ["評分", ME.rating]].map(([k, v]) => (
+              {[[t("配對", "Matches"), ME.matches], [t("回覆率", "Reply rate"), `${ME.replyRate}%`], [t("評分", "Rating"), ME.rating]].map(([k, v]) => (
                 <div key={k as string} className="rounded-xl bg-white/15 backdrop-blur py-2">
                   <p className="text-base font-bold">{v}</p>
                   <p className="text-white/70">{k}</p>
@@ -59,9 +61,9 @@ export default function Profile() {
           <div className="rounded-2xl glass border border-border p-4 space-y-3">
             <div>
               <div className="flex items-center justify-between mb-1">
-                <p className="text-xs text-muted-foreground">自我介紹</p>
+                <p className="text-xs text-muted-foreground">{t("自我介紹", "About me")}</p>
                 <button onClick={() => setShowAI(true)} className="press text-[11px] px-2.5 py-1 rounded-full bg-primary/20 text-primary-glow border border-primary/30 flex items-center gap-1">
-                  <Sparkles className="h-3 w-3" /> AI 幫我寫
+                  <Sparkles className="h-3 w-3" /> {t("AI 幫我寫", "Write with AI")}
                 </button>
               </div>
               {editing ? (
@@ -71,7 +73,7 @@ export default function Profile() {
               )}
             </div>
             <div>
-              <p className="text-xs text-muted-foreground mb-2">喜好</p>
+              <p className="text-xs text-muted-foreground mb-2">{t("喜好", "Interests")}</p>
               <div className="flex flex-wrap gap-1.5">
                 {tags.map((t) => (
                   <span key={t} className="text-xs px-3 py-1 rounded-full bg-primary/15 text-primary-glow border border-primary/30 flex items-center gap-1">
@@ -81,7 +83,7 @@ export default function Profile() {
                 ))}
                 {editing && (
                   <button onClick={() => setShowAdd(!showAdd)} className="press text-xs px-3 py-1 rounded-full border border-dashed border-primary/50 text-primary flex items-center gap-1">
-                    <Plus className="h-3 w-3" /> 新增
+                    <Plus className="h-3 w-3" /> {t("新增", "Add")}
                   </button>
                 )}
               </div>
@@ -97,7 +99,7 @@ export default function Profile() {
 
           {/* 照片 */}
           <div>
-            <p className="text-xs text-muted-foreground mb-2">照片</p>
+            <p className="text-xs text-muted-foreground mb-2">{t("照片", "Photos")}</p>
             <div className="grid grid-cols-3 gap-2">
               {Array.from({ length: 6 }).map((_, i) => (
                 <button key={i} className="aspect-square rounded-xl bg-gradient-to-br from-primary/30 to-accent/30 grid place-items-center text-2xl press hover-lift">
@@ -112,8 +114,8 @@ export default function Profile() {
             <div className="flex items-center gap-3">
               <div className="h-12 w-12 rounded-2xl bg-gradient-warm grid place-items-center"><Crown className="h-6 w-6 text-white" /></div>
               <div className="flex-1">
-                <p className="font-bold">{ME.plan} · 升級解鎖更多</p>
-                <p className="text-[11px] text-muted-foreground">無限滑動 · Boost · 看誰喜歡你</p>
+                <p className="font-bold">{ME.plan} · {t("升級解鎖更多", "Upgrade to unlock more")}</p>
+                <p className="text-[11px] text-muted-foreground">{t("無限滑動 · Boost · 看誰喜歡你", "Unlimited swipes · Boost · See who likes you")}</p>
               </div>
               <span className="text-primary-glow">→</span>
             </div>
@@ -133,8 +135,8 @@ export default function Profile() {
 
           {/* 設定 */}
           <div className="rounded-2xl glass border border-border divide-y divide-border">
-            <button className="press w-full p-4 flex items-center gap-3 text-sm"><Settings className="h-4 w-4 text-muted-foreground" /> 設定與隱私</button>
-            <button onClick={logout} className="press w-full p-4 flex items-center gap-3 text-sm text-rose"><LogOut className="h-4 w-4" /> 斷開錢包 / 登出</button>
+            <button className="press w-full p-4 flex items-center gap-3 text-sm"><Settings className="h-4 w-4 text-muted-foreground" /> {t("設定與隱私", "Settings & privacy")}</button>
+            <button onClick={logout} className="press w-full p-4 flex items-center gap-3 text-sm text-rose"><LogOut className="h-4 w-4" /> {t("斷開錢包 / 登出", "Disconnect wallet / Log out")}</button>
           </div>
         </div>
         <TabBar />

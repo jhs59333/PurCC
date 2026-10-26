@@ -1,3 +1,4 @@
+import { useT } from "@/lib/i18n";
 import { useState } from "react";
 import { PhoneShell } from "@/components/PhoneShell";
 import { TabBar } from "@/components/TabBar";
@@ -6,6 +7,7 @@ import { POSTS } from "@/lib/mock";
 import { Heart, MessageCircle, Plus, Send } from "lucide-react";
 
 export default function Community() {
+  const t = useT();
   const [posts, setPosts] = useState(POSTS);
   const [composing, setComposing] = useState(false);
   const [draft, setDraft] = useState("");
@@ -23,7 +25,7 @@ export default function Community() {
   return (
     <PhoneShell>
       <div className="h-full flex flex-col">
-        <AppHeader title="廣場" />
+        <AppHeader title={t("廣場", "Feed")} />
 
         <div className="px-5 pb-2">
           {composing ? (
