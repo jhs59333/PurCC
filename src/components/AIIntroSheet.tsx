@@ -64,9 +64,9 @@ export function AIIntroSheet({ open, onClose, nickname, tags, onApply }: {
             ))}
           </div>
         </div>
-        <input className={field} placeholder=t("喜歡的活動（例：週末爬山、手沖咖啡）", "Favorite activities (e.g. weekend hikes, pour-over coffee)") value={activities} onChange={(e) => setActivities(e.target.value)} maxLength={200} />
-        <input className={field} placeholder=t("想認識什麼樣的人？", "Who would you like to meet?") value={lookingFor} onChange={(e) => setLookingFor(e.target.value)} maxLength={200} />
-        <textarea className={field} rows={2} placeholder=t("關於我（工作、個性、小怪癖…選填）", "About me (work, personality, quirks… optional)") value={about} onChange={(e) => setAbout(e.target.value)} maxLength={300} />
+        <input className={field} placeholder={t("喜歡的活動（例：週末爬山、手沖咖啡）", "Favorite activities (e.g. weekend hikes, pour-over coffee)")} value={activities} onChange={(e) => setActivities(e.target.value)} maxLength={200} />
+        <input className={field} placeholder={t("想認識什麼樣的人？", "Who would you like to meet?")} value={lookingFor} onChange={(e) => setLookingFor(e.target.value)} maxLength={200} />
+        <textarea className={field} rows={2} placeholder={t("關於我（工作、個性、小怪癖…選填）", "About me (work, personality, quirks… optional)")} value={about} onChange={(e) => setAbout(e.target.value)} maxLength={300} />
 
         <button disabled={loading || !tags.length} onClick={generate} className="press w-full py-3 rounded-2xl bg-gradient-warm text-primary-foreground font-semibold flex items-center justify-center gap-2 disabled:opacity-60">
           {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> {t("撰寫中…", "Writing…")}</> : res ? <><RefreshCw className="h-4 w-4" /> {t("重新產生", "Regenerate")}</> : <><Sparkles className="h-4 w-4" /> {t("產生我的自介", "Write my intro")}</>}
